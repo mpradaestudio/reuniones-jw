@@ -193,49 +193,61 @@ Reglas:
    **independiente** de `users.update`.
 6. **Módulo Usuarios:** email **único global**; usuario **inactivo no puede
    iniciar sesión**; **último AdministradorCongregación protegido** (no se puede
-   desactivar/degradar si es el único activo de su congregación).
+   desactivar/degradar si es el único activo de su congregación); **ningún
+   usuario puede cambiar su propio estado**, incluido el SuperAdministrador.
 7. **Auditoría:** tabla `audit_logs` creada desde el MVP.
 8. **PDF:** DomPDF + Blade (HTML/CSS), sin librerías de pago.
 9. **UI:** **Bootstrap 5** + tipografía **Google Sans Flex**.
 
 ---
 
-## 11. Estado actual
+## 11. Módulo Usuarios — decisiones finales (entregado en `main`)
 
-Rama `feature/estructura-laravel` (mergeada): **estructura base**
-(Laravel 12, MySQL, Spatie, DomPDF, migraciones iniciales, modelos, seeders,
-login/logout y dashboard básico).
+El módulo Usuarios está **completo y fusionado en `main`** (PRs #5 → #6 → #7 → #8).
 
-Rama `feature/usuarios`: **capa backend base del módulo Usuarios**:
-`UserPolicy`, permiso `users.reset-password`, Form Requests
-(`StoreUserRequest`, `UpdateUserRequest`, `ResetUserPasswordRequest`),
-`UserController` (acciones de escritura) con rutas protegidas y pruebas de
-autorización. **Sin vistas, tablas ni formularios** (se construyen después).
+### Reglas de negocio (definitivas)
 
-Rama `feature/usuarios-listado`: **listado de usuarios (UI)**:
-`UserController@index` con **búsqueda** (nombre/apellidos/email), **filtros**
-(estado y rol), **paginación Bootstrap 5** y aislamiento por congregación
-(`viewAny` de la `UserPolicy`). **Aún sin formularios de alta/edición.**
+- **Email único global:** la unicidad del correo NO se acota por congregación.
+- **Un rol por usuario:** un único `role` por usuario (`syncRoles([$role])`); un
+  usuario que no sea SuperAdministrador no puede asignar el rol global.
+- **Usuario inactivo no puede iniciar sesión** (`estado = active` exigido en el
+  login).
+- **Último AdministradorCongregación protegido:** no se puede desactivar ni
+  degradar al único `AdministradorCongregacion` activo de una congregación.
+- **Nadie puede cambiar su propio estado**, incluido el SuperAdministrador
+  (regla uniforme en `UserPolicy::toggleStatus`).
+- **`users.reset-password`** es un permiso **independiente** de `users.update`.
 
-> **Nota de UI (Bootstrap 5):** el andamiaje inicial usaba Tailwind por CDN. Para
-> cumplir la decisión aprobada (Bootstrap 5 + Google Sans Flex), el panel se
-> migró a **Bootstrap 5**: se actualizaron el layout compartido
-> (`layouts/app.blade.php`) y las vistas que dependen de él (`dashboard`,
-> `placeholder`, `auth/login`), y se activó `Paginator::useBootstrapFive()`.
+### Autorización (`UserPolicy`)
 
-Rama `feature/usuarios-crud`: **alta/edición, cambio de estado, asignación de
-rol y auditoría**:
-- Formularios de **crear** (`users/create`) y **editar** (`users/edit`) con
-  partial compartido `users/_form` (un único rol por usuario; selector de
-  congregación solo para el SuperAdministrador).
-- Acciones por fila en el listado: **Editar** y **Activar/Desactivar** (con las
-  comprobaciones de la `UserPolicy`).
-- **Auditoría (`audit_logs`)**: cada acción de escritura registra un evento
-  (`user.created`, `user.updated`, `user.status_changed`, `user.password_reset`)
-  mediante `App\Support\AuditLogger`, capturando autor, congregación, IP y
-  user-agent. La edición guarda **solo los campos modificados** y **nunca**
-  se registran contraseñas.
+- Defensa en profundidad: middleware `permission:` (ruta) + Policy (acción +
+  misma congregación) + Form Requests (entrada).
+- El SuperAdministrador omite el filtro por congregación, salvo la regla de
+  auto-cambio de estado, que aplica a todos los roles por igual.
 
-> **Auditoría — escritura por módulo:** la grabación de eventos es **explícita**
-> en el controlador (no por observers globales), conforme a lo previsto en el
-> modelo `AuditLog`.
+### Componentes entregados
+
+- **Backend:** `UserPolicy`, Form Requests (`StoreUserRequest`,
+  `UpdateUserRequest`, `ResetUserPasswordRequest`), `UserController`
+  (index/create/store/edit/update/toggleStatus/resetPassword), rutas protegidas.
+- **UI (Bootstrap 5):** listado con **búsqueda** (nombre/apellidos/email),
+  **filtros** (estado y rol) y **paginación**; formularios de alta/edición
+  (`users/create`, `users/edit`, partial `users/_form`); acciones por fila
+  (Editar, Activar/Desactivar).
+- **Auditoría (`audit_logs`):** `App\Support\AuditLogger` registra
+  `user.created`, `user.updated` (solo campos modificados), `user.status_changed`
+  y `user.password_reset`, capturando autor, congregación, IP y user-agent.
+  **Nunca** se registran contraseñas. Escritura **explícita por módulo** (sin
+  observers globales).
+- **Cobertura:** 38 pruebas de feature (autorización, aislamiento, búsqueda,
+  filtros, paginación, reglas de negocio y auditoría).
+
+> **Nota de UI (Bootstrap 5):** el andamiaje inicial usaba Tailwind por CDN; el
+> panel se migró a **Bootstrap 5 + Google Sans Flex** (layout compartido,
+> `dashboard`, `placeholder`, `auth/login`) y se activó
+> `Paginator::useBootstrapFive()`.
+
+### Próximo módulo
+
+- **Roles y Permisos:** pendiente de aprobación del diseño funcional y técnico
+  (no implementado todavía).
