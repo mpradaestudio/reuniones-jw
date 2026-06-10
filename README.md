@@ -12,7 +12,7 @@ y discursos).
 
 ## Stack
 
-- PHP 8.2+
+- PHP 8.3 (versión oficial del proyecto; fijada en `config.platform.php`)
 - Laravel 12
 - MySQL
 - Apache (XAMPP) en local
@@ -27,11 +27,17 @@ proyecto en [`CLAUDE.md`](CLAUDE.md).
 
 ## Requisitos previos (XAMPP)
 
-1. Instalar [XAMPP](https://www.apachefriends.org/) (Apache + MySQL + PHP 8.2+).
+1. Instalar [XAMPP](https://www.apachefriends.org/) (Apache + MySQL + **PHP 8.3**).
 2. Instalar [Composer](https://getcomposer.org/).
 3. Asegurar que las extensiones PHP estén activas en `php.ini`:
    `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`,
    `fileinfo`, `curl`, `gd`, `zip`.
+
+> **Versión de PHP:** el proyecto está fijado a **PHP 8.3** mediante
+> `config.platform.php` en `composer.json`. Usa PHP 8.3 en local (XAMPP) y en el
+> hosting (cPanel → *MultiPHP Manager*) para que `composer install` resuelva las
+> mismas versiones. Con PHP 8.2 la instalación fallará; con 8.4 funciona, pero el
+> estándar de despliegue es 8.3.
 
 ---
 
