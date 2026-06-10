@@ -44,14 +44,21 @@ Route::middleware('auth')->group(function () {
         ->name('users.index');
 
     /*
-     | Módulo Usuarios — capa backend (acciones de escritura).
+     | Módulo Usuarios — alta/edición y acciones de escritura.
      | Cada ruta valida el permiso de Spatie y, además, la UserPolicy
      | (misma congregación) a través de los Form Requests / authorize().
-     | Los formularios de alta/edición se construirán en una capa posterior.
      */
+    Route::get('usuarios/crear', [UserController::class, 'create'])
+        ->middleware('permission:users.create')
+        ->name('users.create');
+
     Route::post('usuarios', [UserController::class, 'store'])
         ->middleware('permission:users.create')
         ->name('users.store');
+
+    Route::get('usuarios/{user}/editar', [UserController::class, 'edit'])
+        ->middleware('permission:users.update')
+        ->name('users.edit');
 
     Route::put('usuarios/{user}', [UserController::class, 'update'])
         ->middleware('permission:users.update')

@@ -6,26 +6,28 @@ use App\Enums\UserStatus;
 use App\Http\Requests\Users\ResetUserPasswordRequest;
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
+use App\Models\Congregation;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 /**
- * Capa backend del módulo Usuarios.
- *
- * Solo contiene las acciones de escritura (store/update/toggleStatus/
- * resetPassword), que redirigen tras procesar. La construcción de vistas,
- * tablas y formularios queda fuera de alcance en esta capa base.
+ * Módulo Usuarios: listado, formularios (alta/edición), cambio de estado,
+ * asignación de rol y registro de auditoría.
  *
  * Autorización en profundidad:
  *  - Middleware `permission:` en la ruta (permiso de Spatie).
  *  - UserPolicy (permiso + misma congregación) vía Form Requests / authorize().
  *  - Invariante de negocio: no dejar a una congregación sin un
  *    AdministradorCongregación activo.
+ *
+ * Cada acción de escritura registra un evento en `audit_logs`.
  */
 class UserController extends Controller
 {
@@ -97,6 +99,16 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Formulario de alta de usuario.
+     */
+    public function create(Request $request): View
+    {
+        $this->authorize('create', User::class);
+
+        return view('users.create', $this->formData($request->user()));
+    }
+
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -114,22 +126,49 @@ class UserController extends Controller
             $congregationId = $actor->congregation_id;
         }
 
-        $user = new User([
-            'congregation_id' => $congregationId,
-            'nombre' => $data['nombre'],
-            'apellidos' => $data['apellidos'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'estado' => $data['estado'],
-        ]);
-        $user->save();
+        $user = DB::transaction(function () use ($data, $congregationId) {
+            $user = new User([
+                'congregation_id' => $congregationId,
+                'nombre' => $data['nombre'],
+                'apellidos' => $data['apellidos'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'estado' => $data['estado'],
+            ]);
+            $user->save();
 
-        // Un único rol por usuario.
-        $user->syncRoles([$data['role']]);
+            // Un único rol por usuario.
+            $user->syncRoles([$data['role']]);
+
+            // Auditoría: alta de usuario (sin exponer la contraseña).
+            AuditLogger::record('user.created', $user, [], [
+                'nombre' => $user->nombre,
+                'apellidos' => $user->apellidos,
+                'email' => $user->email,
+                'estado' => $user->estado->value,
+                'role' => $data['role'],
+                'congregation_id' => $user->congregation_id,
+            ]);
+
+            return $user;
+        });
 
         return redirect()
             ->route('users.index')
-            ->with('status', 'Usuario creado correctamente.');
+            ->with('status', "Usuario «{$user->nombre_completo}» creado correctamente.");
+    }
+
+    /**
+     * Formulario de edición de usuario.
+     */
+    public function edit(Request $request, User $user): View
+    {
+        $this->authorize('update', $user);
+
+        return view('users.edit', array_merge($this->formData($request->user()), [
+            'user' => $user,
+            'currentRole' => $user->getRoleNames()->first(),
+        ]));
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
@@ -145,23 +184,58 @@ class UserController extends Controller
             $this->ensureNotLastActiveCongregationAdmin($user, 'role');
         }
 
-        $user->fill([
-            'nombre' => $data['nombre'],
-            'apellidos' => $data['apellidos'],
-            'email' => $data['email'],
-            'estado' => $data['estado'],
-        ]);
+        DB::transaction(function () use ($data, $user) {
+            // Estado anterior (para auditoría) antes de aplicar cambios.
+            $before = [
+                'nombre' => $user->nombre,
+                'apellidos' => $user->apellidos,
+                'email' => $user->email,
+                'estado' => $user->estado->value,
+                'role' => $user->getRoleNames()->first(),
+            ];
 
-        if (! empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
-        }
+            $user->fill([
+                'nombre' => $data['nombre'],
+                'apellidos' => $data['apellidos'],
+                'email' => $data['email'],
+                'estado' => $data['estado'],
+            ]);
 
-        $user->save();
-        $user->syncRoles([$data['role']]);
+            $passwordChanged = ! empty($data['password']);
+            if ($passwordChanged) {
+                $user->password = Hash::make($data['password']);
+            }
+
+            $user->save();
+            $user->syncRoles([$data['role']]);
+
+            $after = [
+                'nombre' => $user->nombre,
+                'apellidos' => $user->apellidos,
+                'email' => $user->email,
+                'estado' => $user->estado->value,
+                'role' => $data['role'],
+            ];
+
+            // Auditoría: solo los campos que cambiaron.
+            $changedOld = [];
+            $changedNew = [];
+            foreach ($after as $field => $value) {
+                if ($before[$field] !== $value) {
+                    $changedOld[$field] = $before[$field];
+                    $changedNew[$field] = $value;
+                }
+            }
+            if ($passwordChanged) {
+                $changedNew['password'] = '[actualizada]';
+            }
+
+            AuditLogger::record('user.updated', $user, $changedOld, $changedNew);
+        });
 
         return redirect()
             ->route('users.index')
-            ->with('status', 'Usuario actualizado correctamente.');
+            ->with('status', "Usuario «{$user->nombre_completo}» actualizado correctamente.");
     }
 
     public function toggleStatus(User $user): RedirectResponse
@@ -175,22 +249,65 @@ class UserController extends Controller
             $this->ensureNotLastActiveCongregationAdmin($user, 'estado');
         }
 
-        $user->estado = $deactivating ? UserStatus::Inactive : UserStatus::Active;
-        $user->save();
+        DB::transaction(function () use ($user, $deactivating) {
+            $old = $user->estado->value;
+            $user->estado = $deactivating ? UserStatus::Inactive : UserStatus::Active;
+            $user->save();
+
+            AuditLogger::record(
+                'user.status_changed',
+                $user,
+                ['estado' => $old],
+                ['estado' => $user->estado->value],
+            );
+        });
 
         return redirect()
             ->route('users.index')
-            ->with('status', 'Estado del usuario actualizado correctamente.');
+            ->with('status', "Estado de «{$user->nombre_completo}» actualizado a {$user->estado->label()}.");
     }
 
     public function resetPassword(ResetUserPasswordRequest $request, User $user): RedirectResponse
     {
-        $user->password = Hash::make($request->validated()['password']);
-        $user->save();
+        DB::transaction(function () use ($request, $user) {
+            $user->password = Hash::make($request->validated()['password']);
+            $user->save();
+
+            // Auditoría: nunca se registran las contraseñas.
+            AuditLogger::record('user.password_reset', $user);
+        });
 
         return redirect()
             ->route('users.index')
-            ->with('status', 'Contraseña restablecida correctamente.');
+            ->with('status', "Contraseña de «{$user->nombre_completo}» restablecida correctamente.");
+    }
+
+    /**
+     * Datos comunes para los formularios de alta/edición.
+     *
+     * @return array<string, mixed>
+     */
+    protected function formData(User $actor): array
+    {
+        $superAdminRole = config('tenancy.super_admin_role', 'SuperAdministrador');
+
+        // El rol global solo lo puede asignar (y por tanto ver) el SuperAdministrador.
+        $roles = Role::query()
+            ->when(! $actor->isSuperAdmin(), fn ($q) => $q->where('name', '!=', $superAdminRole))
+            ->orderBy('name')
+            ->pluck('name');
+
+        // El selector de congregación solo aplica al SuperAdministrador.
+        $congregations = $actor->isSuperAdmin()
+            ? Congregation::query()->orderBy('nombre')->get(['id', 'nombre'])
+            : collect();
+
+        return [
+            'roles' => $roles,
+            'statuses' => UserStatus::options(),
+            'congregations' => $congregations,
+            'isSuperAdmin' => $actor->isSuperAdmin(),
+        ];
     }
 
     /**

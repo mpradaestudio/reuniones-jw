@@ -5,6 +5,13 @@
 @section('content')
     @php($isSuperAdmin = auth()->user()->isSuperAdmin())
 
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0 text-dark">Usuarios</h2>
+        @can('create', \App\Models\User::class)
+            <a href="{{ route('users.create') }}" class="btn btn-dark">Crear usuario</a>
+        @endcan
+    </div>
+
     {{-- Búsqueda y filtros --}}
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-body">
@@ -47,7 +54,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h6 mb-0 text-dark">Usuarios</h2>
+                <h2 class="h6 mb-0 text-dark">Resultados</h2>
                 <span class="text-secondary small">{{ $users->total() }} resultado(s)</span>
             </div>
 
@@ -62,6 +69,7 @@
                                 <th scope="col">Congregación</th>
                             @endif
                             <th scope="col">Estado</th>
+                            <th scope="col" class="text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,10 +92,31 @@
                                     @php($estadoClass = $user->estado === \App\Enums\UserStatus::Active ? 'text-bg-success' : 'text-bg-secondary')
                                     <span class="badge {{ $estadoClass }}">{{ $user->estado->label() }}</span>
                                 </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        @can('update', $user)
+                                            <a href="{{ route('users.edit', $user) }}"
+                                               class="btn btn-sm btn-outline-secondary">Editar</a>
+                                        @endcan
+
+                                        @can('toggleStatus', $user)
+                                            <form method="POST" action="{{ route('users.toggle-status', $user) }}"
+                                                  class="d-inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                @if($user->estado === \App\Enums\UserStatus::Active)
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning">Desactivar</button>
+                                                @else
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                                                @endif
+                                            </form>
+                                        @endcan
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isSuperAdmin ? 5 : 4 }}" class="text-center text-secondary py-4">
+                                <td colspan="{{ $isSuperAdmin ? 6 : 5 }}" class="text-center text-secondary py-4">
                                     No se encontraron usuarios con los criterios indicados.
                                 </td>
                             </tr>

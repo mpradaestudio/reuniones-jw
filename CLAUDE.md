@@ -222,3 +222,20 @@ Rama `feature/usuarios-listado`: **listado de usuarios (UI)**:
 > migró a **Bootstrap 5**: se actualizaron el layout compartido
 > (`layouts/app.blade.php`) y las vistas que dependen de él (`dashboard`,
 > `placeholder`, `auth/login`), y se activó `Paginator::useBootstrapFive()`.
+
+Rama `feature/usuarios-crud`: **alta/edición, cambio de estado, asignación de
+rol y auditoría**:
+- Formularios de **crear** (`users/create`) y **editar** (`users/edit`) con
+  partial compartido `users/_form` (un único rol por usuario; selector de
+  congregación solo para el SuperAdministrador).
+- Acciones por fila en el listado: **Editar** y **Activar/Desactivar** (con las
+  comprobaciones de la `UserPolicy`).
+- **Auditoría (`audit_logs`)**: cada acción de escritura registra un evento
+  (`user.created`, `user.updated`, `user.status_changed`, `user.password_reset`)
+  mediante `App\Support\AuditLogger`, capturando autor, congregación, IP y
+  user-agent. La edición guarda **solo los campos modificados** y **nunca**
+  se registran contraseñas.
+
+> **Auditoría — escritura por módulo:** la grabación de eventos es **explícita**
+> en el controlador (no por observers globales), conforme a lo previsto en el
+> modelo `AuditLog`.
