@@ -247,32 +247,67 @@ El módulo Usuarios está **completo y fusionado en `main`** (PRs #5 → #6 → 
 > `dashboard`, `placeholder`, `auth/login`) y se activó
 > `Paginator::useBootstrapFive()`.
 
-### Módulo Roles y Permisos — backend (en progreso)
+## 12. Módulo Roles y Permisos — completo (entregado en `main`)
 
-Diseño aprobado. Capa backend entregada (sin UI todavía):
+El módulo Roles y Permisos está **completo y fusionado en `main`** (PRs #9 → #10).
 
-- **Roles GLOBALes** (sin Teams); **permisos definidos solo en código** (catálogo
-  en `RolePermissionSeeder`). El módulo gestiona qué permisos tiene cada rol, no
+### Reglas de negocio (definitivas)
+
+- **Roles globales** (sin Teams); **permisos definidos solo en código** (catálogo
+  en `RolePermissionSeeder`). El módulo gestiona qué permisos tiene cada rol; no
   permite crear permisos desde la UI.
 - **Solo `roles.manage`** (SuperAdministrador) gestiona roles; el
-  **AdministradorCongregación no gestiona** roles ni permisos (solo `roles.assign`
-  para asignar roles existentes a sus usuarios).
+  **AdministradorCongregación** solo tiene `roles.view` (puede ver el módulo en
+  modo solo lectura; sin acciones de gestión).
 - **Roles de sistema protegidos** (`SuperAdministrador`, `AdministradorCongregacion`,
   `Usuario`): no se renombran ni eliminan (columna `roles.is_system`). El
-  **SuperAdministrador conserva siempre todos los permisos**.
+  **SuperAdministrador conserva siempre todos los permisos** (checkboxes
+  bloqueados en edición).
 - **Eliminar rol personalizado con usuarios:** exige rol destino (`reassign_to`);
-  reasigna los usuarios (un rol por usuario) y luego elimina.
+  reasigna los usuarios (un rol por usuario) y luego elimina. El selector de
+  destino **excluye el propio rol y el rol global SuperAdministrador** (evita
+  escalada de privilegios).
 - **Duplicar rol:** clona los permisos en un rol personalizado nuevo.
+
+### Autorización (`RolePolicy`)
+
+- `roles.view`: acceso de solo lectura al listado y detalle (SuperAdministrador y
+  AdministradorCongregacion).
+- `roles.manage`: crear, editar, duplicar y eliminar (solo SuperAdministrador).
+
+### Componentes entregados
+
+- **Backend (PR #9):** `RolePolicy`, Form Requests (`StoreRoleRequest`,
+  `UpdateRoleRequest`, `DuplicateRoleRequest`, `DestroyRoleRequest`),
+  `RoleController` (acciones write), rutas protegidas, `App\Models\Role`
+  (extiende Spatie) con `is_system`, `description` e `isSystem()`;
+  `config/permission.php` apunta a este modelo.
+- **UI Bootstrap 5 (PR #10):** listado con **nº de permisos**, **nº de usuarios**
+  e indicador **Sistema/Personalizado** y botón **Crear rol**; detalle con
+  permisos **agrupados por módulo** (Panel, Congregaciones, Usuarios, Roles) y
+  usuarios asignados; formularios crear/editar con partial `_form` (checkboxes
+  por módulo; nombre inmutable en roles de sistema; permisos bloqueados para
+  SuperAdministrador); formulario **Duplicar rol**; **asistente de reasignación**
+  al eliminar (selector que excluye rol propio y SuperAdministrador). Se eliminó
+  `PlaceholderController::roles()`.
+- **Rutas GET** (10 rutas): `roles/crear` declarada antes de `roles/{role}` para
+  evitar colisión de parámetros.
 - **Auditoría (`audit_logs`):** `role.created`, `role.updated` (solo cambios),
   `role.duplicated`, `role.deleted` (con datos de reasignación).
-- **Modelo:** `App\Models\Role` (extiende el de spatie) con `is_system`,
-  `description` e `isSystem()`; `config/permission.php` apunta a este modelo.
-- **Cobertura:** 11 pruebas de feature (autorización, unicidad, protección de
-  roles de sistema, duplicado, eliminación con reasignación y auditoría).
-- **UI (Bootstrap 5 + Google Sans Flex):** listado con **nº de permisos**,
-  **nº de usuarios** e indicador **Sistema/Personalizado**; detalle con permisos
-  agrupados por módulo y usuarios; formularios de crear/editar (checkboxes de
-  permisos por módulo; nombre inmutable en roles de sistema); duplicar rol; y
-  **asistente de reasignación** al eliminar (selector de rol destino que excluye
-  el propio rol y el rol global SuperAdministrador). `roles.view` permite ver
-  (solo lectura); `roles.manage` habilita la gestión.
+- **Cobertura:** 24 pruebas de feature — 15 de lógica de negocio
+  (`RoleManagementTest`) + 9 de UI (`RoleUiTest`) — más los 36 tests de Usuarios
+  ya existentes. Total: **60 passed (198 assertions)**.
+
+### Cobertura total post-PR #10
+
+| Suite                     | Tests |
+|---------------------------|-------|
+| `RoleManagementTest`      |  15   |
+| `RoleUiTest`              |   9   |
+| `UserAuditTest`           |   5   |
+| `UserAuthorizationTest`   |   7   |
+| `UserFormsTest`           |   5   |
+| `UserIndexTest`           |   9   |
+| `UserManagementRulesTest` |  10   |
+| Otros (Unit + Feature)    |   2   |
+| **Total**                 | **60 (198 assertions)** |
