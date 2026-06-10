@@ -16,7 +16,8 @@ al "eliminar" una congregación.
 - No se permite **borrado físico** de congregaciones.
 - Se usa **SoftDeletes** de Laravel (columna `deleted_at`) para mantener el
   historial.
-- La baja operativa se hace por **desactivación lógica** con `estado = 'inactiva'`.
+- La baja operativa se hace por **desactivación lógica** con `estado = 'inactive'`
+  (o `suspended` para una baja temporal).
 - La FK `users.congregation_id → congregations.id` usa **ON DELETE RESTRICT**.
 
 **Consecuencias:**
@@ -36,8 +37,12 @@ datos de otra congregación.
 **Decisión:**
 - El **tenant se resuelve por subdominio desde el MVP**
   (`congregacion-a.midominio.com`) mediante un middleware `IdentifyCongregation`.
-- Cada usuario mantiene su `congregation_id`. Tras el login se valida que coincida
-  con la congregación del subdominio (excepto `SuperAdministrador`).
+- Cada usuario mantiene su `congregation_id`.
+- **Validación estricta de tenant en el login:** el usuario **solo** puede
+  autenticarse en el subdominio de su propia congregación. Si el `congregation_id`
+  del usuario no coincide con la congregación del subdominio, el login se rechaza.
+- **Única excepción:** el `SuperAdministrador`, que puede acceder desde cualquier
+  subdominio / área global.
 - **Toda** consulta de tablas de negocio se filtra por `congregation_id` mediante
   un **Global Scope** (`CongregationScope`) + trait `BelongsToCongregation`.
 - El Global Scope se desactiva para el `SuperAdministrador`.
@@ -79,14 +84,36 @@ datos de otra congregación.
 `suspendida`, `pendiente`).
 
 **Decisión:**
-- Modelar `estado` como **ENUM** en lugar de boolean.
-  - `congregations.estado`: `enum('activa','inactiva')`, default `activa`.
-  - `users.estado`: `enum('activo','inactivo')`, default `activo`.
+- Modelar `estado` como **ENUM** en lugar de boolean, con **valores en inglés**:
+  - `congregations.estado`: `enum('active','inactive','suspended')`, default `active`.
+  - `users.estado`: `enum('active','inactive')`, default `active`.
 - En Laravel se respaldará con **Enums de PHP** (cast `enum`) para tipado fuerte.
 
 **Consecuencias:**
 - Mayor flexibilidad para añadir estados sin migrar de tipo de columna.
+- `suspended` permite una baja temporal de congregación distinta de `inactive`.
 - Validación de valores permitidos centralizada en el Enum de PHP.
+
+---
+
+## ADR-005 — Auditoría desde el MVP (`audit_logs`)
+
+**Estado:** Aceptada
+
+**Contexto:** Se requiere trazabilidad de acciones para auditorías futuras, sin
+rehacer el esquema más adelante.
+
+**Decisión:**
+- Crear desde el **MVP** la tabla **`audit_logs`** y su modelo `AuditLog`.
+- Campos: `congregation_id` (nullable, acciones globales del SuperAdmin),
+  `user_id`, `event`, `auditable_type`/`auditable_id` (morph), `old_values` y
+  `new_values` (JSON), `ip_address`, `user_agent`, timestamps.
+- El registro automático de eventos se conectará de forma progresiva por módulo
+  (observers / eventos de modelo).
+
+**Consecuencias:**
+- La estructura de auditoría está disponible desde el inicio.
+- Las consultas de auditoría de una congregación se filtran por `congregation_id`.
 
 ---
 
@@ -95,6 +122,7 @@ datos de otra congregación.
 | ADR | Tema                         | Decisión clave                                            |
 |-----|------------------------------|-----------------------------------------------------------|
 | 001 | Persistencia congregaciones  | SoftDeletes + desactivación lógica, sin borrado físico    |
-| 002 | Multi-congregación           | Tenant por subdominio (MVP) + Global Scope por `congregation_id` |
+| 002 | Multi-congregación           | Tenant por subdominio (MVP) + validación estricta + Global Scope |
 | 003 | RBAC                         | Spatie sin Teams; 1 usuario → 1 congregación              |
-| 004 | Estado                       | ENUM en lugar de boolean                                  |
+| 004 | Estado                       | ENUM `active/inactive/suspended` (congregación) y `active/inactive` (usuario) |
+| 005 | Auditoría                    | Tabla `audit_logs` creada desde el MVP                    |
