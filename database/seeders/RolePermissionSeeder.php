@@ -27,6 +27,7 @@ class RolePermissionSeeder extends Seeder
             'congregations.create',
             'congregations.update',
             'congregations.toggle-status',
+            'congregations.delete',
             // Usuarios
             'users.view',
             'users.create',

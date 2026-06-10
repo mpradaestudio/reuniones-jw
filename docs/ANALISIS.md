@@ -295,7 +295,7 @@ Convención: `accion modulo` (en inglés, separado por punto o espacio según Sp
 
 | Módulo        | Permisos                                                                 |
 |---------------|--------------------------------------------------------------------------|
-| Congregations | `congregations.view`, `congregations.create`, `congregations.update`, `congregations.toggle-status` |
+| Congregations | `congregations.view`, `congregations.create`, `congregations.update`, `congregations.toggle-status`, `congregations.delete` |
 | Users         | `users.view`, `users.create`, `users.update`, `users.toggle-status`      |
 | Roles         | `roles.view`, `roles.assign`, `roles.manage`                             |
 | Dashboard     | `dashboard.view`                                                         |

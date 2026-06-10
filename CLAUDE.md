@@ -120,7 +120,9 @@ Reglas:
   SuperAdministrador), `user_id`, el modelo afectado (morph), valores antes/después
   (JSON), IP y user agent.
 - En el MVP se crea la **migración y el modelo**; el registro automático de
-  eventos se irá conectando por módulo.
+  eventos se irá conectando por módulo. El **módulo Congregaciones** es el primero
+  cableado, vía el helper `App\Support\AuditLogger` (eventos `created`, `updated`,
+  `status_changed`, `deleted`, `restored`).
 
 ---
 
@@ -168,7 +170,10 @@ Reglas:
 4. **Validación estricta de tenant:** el usuario solo inicia sesión en el
    subdominio de su congregación; **SuperAdministrador** es la única excepción.
 5. **RBAC:** spatie/laravel-permission, **sin Teams**; 1 usuario → 1 congregación.
-6. **Auditoría:** tabla `audit_logs` creada desde el MVP.
+   Catálogo de permisos extensible; el módulo Congregaciones añade
+   `congregations.delete` (borrado lógico + restauración).
+6. **Auditoría:** tabla `audit_logs` creada desde el MVP; cableada en el módulo
+   Congregaciones vía `AuditLogger`.
 7. **PDF:** DomPDF + Blade (HTML/CSS), sin librerías de pago.
 8. **Frontend:** Bootstrap 5 + Google Sans Flex; layout maestro con navbar,
    sidebar, footer y variables CSS centralizados.
@@ -177,7 +182,8 @@ Reglas:
 
 ## 12. Estado actual
 
-Rama `feature/frontend-base`: base visual del proyecto (Bootstrap 5, Google Sans
-Flex, layout maestro con navbar/sidebar/footer, variables CSS globales y dashboard
-sobre el layout base). **Sin CRUD de negocio** todavía (pendiente de validación de
-la arquitectura visual y el layout base).
+Rama `feature/congregaciones`: **CRUD completo de Congregaciones** para el
+SuperAdministrador (listado con filtros, alta, edición, cambio de estado
+active/inactive/suspended, borrado lógico con papelera y restauración),
+validaciones, Policy + permisos Spatie, auditoría e integración con el dashboard.
+Pendientes los módulos de Usuarios y Roles.

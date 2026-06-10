@@ -11,14 +11,6 @@ use Illuminate\View\View;
  */
 class PlaceholderController extends Controller
 {
-    public function congregations(): View
-    {
-        return view('placeholder', [
-            'title' => 'Congregaciones',
-            'description' => 'El módulo de gestión de congregaciones se implementará próximamente.',
-        ]);
-    }
-
     public function users(): View
     {
         return view('placeholder', [

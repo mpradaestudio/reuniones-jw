@@ -27,6 +27,8 @@ class DashboardController extends Controller
                 'users_total' => User::count(),
                 'users_active' => User::where('estado', UserStatus::Active)->count(),
             ];
+
+            $latestCongregations = Congregation::latest()->take(5)->get();
         } else {
             $congregationId = $user->congregation_id;
 
@@ -40,8 +42,10 @@ class DashboardController extends Controller
                     ->where('estado', UserStatus::Active)
                     ->count(),
             ];
+
+            $latestCongregations = collect();
         }
 
-        return view('dashboard', compact('metrics'));
+        return view('dashboard', compact('metrics', 'latestCongregations'));
     }
 }
