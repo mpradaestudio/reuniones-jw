@@ -160,6 +160,30 @@ class UserManagementRulesTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_super_admin_cannot_toggle_their_own_status(): void
+    {
+        $superAdmin = $this->makeUser('SuperAdministrador', null);
+
+        $this->actingAs($superAdmin)
+            ->patch(route('users.toggle-status', $superAdmin))
+            ->assertForbidden();
+
+        $this->assertSame(UserStatus::Active, $superAdmin->fresh()->estado);
+    }
+
+    public function test_super_admin_can_still_toggle_another_users_status(): void
+    {
+        $congregation = Congregation::factory()->create();
+        $superAdmin = $this->makeUser('SuperAdministrador', null);
+        $target = $this->makeUser('Usuario', $congregation->id, 'active');
+
+        $this->actingAs($superAdmin)
+            ->patch(route('users.toggle-status', $target))
+            ->assertRedirect(route('users.index'));
+
+        $this->assertSame(UserStatus::Inactive, $target->fresh()->estado);
+    }
+
     public function test_inactive_user_cannot_login(): void
     {
         $congregation = Congregation::factory()->create();

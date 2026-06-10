@@ -12,17 +12,26 @@ use App\Models\User;
  *  - Esta Policy revalida el permiso y, además, exige que el recurso pertenezca
  *    a la MISMA congregación que el usuario que actúa.
  *
- * El SuperAdministrador opera de forma global y omite toda restricción
- * (resuelto en `before()`).
+ * El SuperAdministrador opera de forma global y omite el filtro por congregación.
+ * Única excepción: el cambio de estado propio está prohibido para todos los
+ * roles, incluido el SuperAdministrador (ver `toggleStatus`).
  */
 class UserPolicy
 {
     /**
      * El SuperAdministrador puede realizar cualquier acción (acceso global).
      * Devolver null deja que se evalúe el método concreto.
+     *
+     * Excepción: `toggleStatus` se evalúa SIEMPRE en su método para aplicar de
+     * forma uniforme la regla de que nadie puede cambiar su propio estado
+     * (incluido el SuperAdministrador).
      */
     public function before(User $user, string $ability): ?bool
     {
+        if ($ability === 'toggleStatus') {
+            return null;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
@@ -53,13 +62,25 @@ class UserPolicy
     }
 
     /**
-     * Activar/desactivar un usuario. Un usuario no puede cambiar su propio estado
-     * (evita que un administrador se autobloquee).
+     * Activar/desactivar un usuario.
+     *
+     * Regla uniforme para TODOS los roles: nadie puede cambiar su propio estado
+     * (evita autobloqueos). El SuperAdministrador puede cambiar el estado de
+     * cualquier otro usuario (acceso global); el resto, solo dentro de su
+     * congregación y con el permiso correspondiente.
      */
     public function toggleStatus(User $user, User $model): bool
     {
+        // Nadie puede desactivarse/activarse a sí mismo, ni siquiera el SuperAdministrador.
+        if ($user->id === $model->id) {
+            return false;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->can('users.toggle-status')
-            && $user->id !== $model->id
             && $this->sameCongregation($user, $model);
     }
 
