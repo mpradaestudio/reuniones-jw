@@ -13,7 +13,8 @@ El modelo se divide en tres bloques:
 1. **Núcleo de negocio**: `congregations`, `users`.
 2. **RBAC (Spatie)**: `roles`, `permissions`, `model_has_roles`,
    `model_has_permissions`, `role_has_permissions`.
-3. **Autenticación/infraestructura Laravel**: `password_reset_tokens`,
+3. **Auditoría**: `audit_logs` (creada desde el MVP).
+4. **Autenticación/infraestructura Laravel**: `password_reset_tokens`,
    `sessions`, `cache`, `jobs` (estándar de Laravel 12).
 
 > Nota: el enunciado original mencionaba una tabla `role_user`. Al adoptar
@@ -29,7 +30,7 @@ Entidad raíz del modelo multi-tenant. Cada dato del sistema cuelga de aquí.
 | `id`          | BIGINT UNSIGNED     | PK, auto-increment                  | Identificador                        |
 | `nombre`      | VARCHAR(150)        | NOT NULL                            | Nombre de la congregación            |
 | `subdominio`  | VARCHAR(100)        | NOT NULL, UNIQUE                    | Subdominio único (tenant)            |
-| `estado`      | ENUM('activa','inactiva') | NOT NULL, DEFAULT 'activa'    | Desactivación lógica                 |
+| `estado`      | ENUM('active','inactive','suspended') | NOT NULL, DEFAULT 'active' | Estado operativo            |
 | `created_at`  | TIMESTAMP           | nullable                            | Alta                                 |
 | `updated_at`  | TIMESTAMP           | nullable                            | Última modificación                  |
 | `deleted_at`  | TIMESTAMP           | nullable (SoftDeletes)              | Borrado lógico (mantiene historial)  |
@@ -38,20 +39,21 @@ Entidad raíz del modelo multi-tenant. Cada dato del sistema cuelga de aquí.
 
 > **Persistencia:** no se permite borrado físico. Se usa **SoftDeletes**
 > (`deleted_at`) para conservar el historial. La desactivación operativa se hace
-> con `estado = 'inactiva'`.
+> con `estado = 'inactive'`. El estado `suspended` permite una baja temporal
+> (p. ej. impago/revisión) distinta de la desactivación definitiva.
 
 ### 1.2 Tabla `users`
 
 | Columna             | Tipo              | Restricciones                                  | Descripción                  |
 |---------------------|-------------------|------------------------------------------------|------------------------------|
 | `id`                | BIGINT UNSIGNED   | PK, auto-increment                             | Identificador                |
-| `congregation_id`   | BIGINT UNSIGNED   | FK → `congregations.id`, NULLABLE, ON DELETE CASCADE | Tenant del usuario     |
+| `congregation_id`   | BIGINT UNSIGNED   | FK → `congregations.id`, NULLABLE, ON DELETE RESTRICT | Tenant del usuario     |
 | `nombre`            | VARCHAR(100)      | NOT NULL                                       | Nombre                       |
 | `apellidos`         | VARCHAR(150)      | NOT NULL                                       | Apellidos                    |
 | `email`             | VARCHAR(190)      | NOT NULL, UNIQUE                               | Correo / login               |
 | `email_verified_at` | TIMESTAMP         | nullable                                       | Verificación (Laravel)       |
 | `password`          | VARCHAR(255)      | NOT NULL                                       | Hash bcrypt/argon2           |
-| `estado`            | ENUM('activo','inactivo') | NOT NULL, DEFAULT 'activo'             | Desactivación lógica         |
+| `estado`            | ENUM('active','inactive') | NOT NULL, DEFAULT 'active'             | Desactivación lógica         |
 | `remember_token`    | VARCHAR(100)      | nullable                                       | "Recuérdame" (Laravel)       |
 | `created_at`        | TIMESTAMP         | nullable                                       | Alta                         |
 | `updated_at`        | TIMESTAMP         | nullable                                       | Última modificación          |
@@ -74,6 +76,32 @@ estándar:
   (permisos directos a usuarios).
 - **`role_has_permissions`**: `permission_id`, `role_id` (permisos de cada rol).
 
+### 1.4 Tabla `audit_logs`
+
+Registro de auditoría, creado desde el MVP para soportar trazabilidad futura.
+
+| Columna           | Tipo                | Restricciones                                  | Descripción                              |
+|-------------------|---------------------|------------------------------------------------|------------------------------------------|
+| `id`              | BIGINT UNSIGNED     | PK, auto-increment                             | Identificador                            |
+| `congregation_id` | BIGINT UNSIGNED     | FK → `congregations.id`, NULLABLE, ON DELETE SET NULL | Tenant (NULL = acción global SuperAdmin) |
+| `user_id`         | BIGINT UNSIGNED     | FK → `users.id`, NULLABLE, ON DELETE SET NULL  | Autor de la acción                       |
+| `event`           | VARCHAR(50)         | NOT NULL                                       | `created`, `updated`, `deleted`, `login`, `logout`… |
+| `auditable_type`  | VARCHAR(255)        | NULLABLE                                       | Modelo afectado (morph)                  |
+| `auditable_id`    | BIGINT UNSIGNED     | NULLABLE                                       | ID del modelo afectado (morph)           |
+| `old_values`      | JSON                | NULLABLE                                       | Valores anteriores                       |
+| `new_values`      | JSON                | NULLABLE                                       | Valores nuevos                           |
+| `ip_address`      | VARCHAR(45)         | NULLABLE                                       | IP de origen (IPv4/IPv6)                 |
+| `user_agent`      | TEXT                | NULLABLE                                       | Navegador/cliente                        |
+| `created_at`      | TIMESTAMP           | nullable                                       | Momento del evento                       |
+| `updated_at`      | TIMESTAMP           | nullable                                       | (estándar Laravel)                       |
+
+Índices: `INDEX(congregation_id)`, `INDEX(user_id)`,
+`INDEX(auditable_type, auditable_id)`, `INDEX(event)`.
+
+> En el MVP se crean la **migración** y el **modelo** `AuditLog`. El registro
+> automático de eventos se conectará progresivamente por módulo (observers /
+> eventos de modelo) sin cambiar el esquema.
+
 ---
 
 ## 2. Relaciones entre tablas
@@ -87,6 +115,9 @@ estándar:
 | `User`          | `roles()`             | `Role`           | belongsToMany (Spatie / morph) |
 | `User`          | `permissions()`       | `Permission`     | belongsToMany (Spatie / morph) |
 | `Role`          | `permissions()`       | `Permission`     | belongsToMany (Spatie) |
+| `Congregation`  | `auditLogs()`         | `AuditLog`       | hasMany         |
+| `User`          | `auditLogs()`         | `AuditLog`       | hasMany         |
+| `AuditLog`      | `auditable()`         | (varios)         | morphTo         |
 
 ```
 Congregation 1 ──< N User                (congregations.id → users.congregation_id)
@@ -109,6 +140,8 @@ User          N >──< N Permission         (vía model_has_permissions, opcio
 ```mermaid
 erDiagram
     CONGREGATIONS ||--o{ USERS : "tiene"
+    CONGREGATIONS ||--o{ AUDIT_LOGS : "registra"
+    USERS ||--o{ AUDIT_LOGS : "genera"
     USERS ||--o{ MODEL_HAS_ROLES : "morphs"
     ROLES ||--o{ MODEL_HAS_ROLES : "asignado en"
     USERS ||--o{ MODEL_HAS_PERMISSIONS : "morphs"
@@ -120,7 +153,7 @@ erDiagram
         bigint id PK
         string nombre
         string subdominio UK
-        enum estado "activa|inactiva"
+        enum estado "active|inactive|suspended"
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at "SoftDeletes"
@@ -134,7 +167,7 @@ erDiagram
         string email UK
         timestamp email_verified_at
         string password
-        enum estado "activo|inactivo"
+        enum estado "active|inactive"
         string remember_token
         timestamp created_at
         timestamp updated_at
@@ -171,6 +204,21 @@ erDiagram
     ROLE_HAS_PERMISSIONS {
         bigint permission_id FK
         bigint role_id FK
+    }
+
+    AUDIT_LOGS {
+        bigint id PK
+        bigint congregation_id FK "nullable"
+        bigint user_id FK "nullable"
+        string event
+        string auditable_type "morph"
+        bigint auditable_id "morph"
+        json old_values
+        json new_values
+        string ip_address
+        text user_agent
+        timestamp created_at
+        timestamp updated_at
     }
 ```
 
@@ -213,11 +261,12 @@ if (auth()->check() && !auth()->user()->hasRole('SuperAdministrador')) {
   1. Extrae el subdominio de la petición.
   2. Carga la `Congregation` correspondiente (404 si no existe o está inactiva).
   3. La comparte en el contenedor/contexto para el Global Scope y las vistas.
-- Además, cada usuario mantiene su `congregation_id`. Tras el login se valida que
-  el `congregation_id` del usuario **coincida** con la congregación del subdominio
-  (salvo `SuperAdministrador`, que puede operar de forma global).
-- El `SuperAdministrador` accede sin restricción de subdominio (o vía un
-  subdominio/área de administración global).
+- Además, cada usuario mantiene su `congregation_id`. **Validación estricta de
+  tenant en el login:** el usuario **solo** puede autenticarse en el subdominio de
+  su propia congregación. Si su `congregation_id` no coincide con la congregación
+  resuelta por el subdominio, el login se **rechaza**.
+- **Única excepción:** el `SuperAdministrador`, que puede acceder desde cualquier
+  subdominio o desde el área de administración global.
 
 ### 4.4 Autorización (Policies/Gates)
 
@@ -277,6 +326,7 @@ Asignación por rol (resumen):
 - RBAC con Spatie (3 roles iniciales).
 - Dashboard con métricas (total congregaciones/usuarios, activos).
 - Autenticación (login/logout, middlewares, CSRF, hashing).
+- **Auditoría base**: tabla y modelo `audit_logs` (registro por módulo progresivo).
 
 ### Fase 2 — Estructura organizativa
 - **Horarios**: días/horas de reuniones por congregación (`schedules`).
@@ -299,7 +349,7 @@ Asignación por rol (resumen):
 - Exportaciones y plantillas personalizables vía HTML/CSS.
 
 ### Fase 6 — Mejoras transversales
-- Auditoría/log de cambios.
+- Auditoría avanzada (registro automático en todos los módulos sobre `audit_logs`).
 - Gestión documental y adjuntos.
 - API para app móvil.
 - Internacionalización (i18n) ampliada.
@@ -317,8 +367,11 @@ Estas decisiones quedan cerradas y guían la implementación (ver detalle en
 2. **Multi-congregación:** tenant resuelto **por subdominio desde el MVP**;
    `congregation_id` asociado al usuario; **toda** consulta filtrada por
    `congregation_id` (Global Scope).
-3. **Spatie:** **sin modo Teams** por ahora; cada usuario pertenece a una sola
+3. **Validación estricta de tenant:** el usuario solo inicia sesión en el
+   subdominio de su congregación; el `SuperAdministrador` es la única excepción.
+4. **Spatie:** **sin modo Teams** por ahora; cada usuario pertenece a una sola
    congregación.
-4. **Estado:** **ENUM** en lugar de boolean
-   (`congregations`: `activa|inactiva`; `users`: `activo|inactivo`) para permitir
-   ampliaciones futuras.
+5. **Estado:** **ENUM** en lugar de boolean
+   (`congregations`: `active|inactive|suspended`; `users`: `active|inactive`)
+   para permitir ampliaciones futuras.
+6. **Auditoría:** tabla `audit_logs` creada desde el MVP (migración + modelo).
