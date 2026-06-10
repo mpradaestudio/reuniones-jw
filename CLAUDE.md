@@ -247,7 +247,28 @@ El módulo Usuarios está **completo y fusionado en `main`** (PRs #5 → #6 → 
 > `dashboard`, `placeholder`, `auth/login`) y se activó
 > `Paginator::useBootstrapFive()`.
 
-### Próximo módulo
+### Módulo Roles y Permisos — backend (en progreso)
 
-- **Roles y Permisos:** pendiente de aprobación del diseño funcional y técnico
-  (no implementado todavía).
+Diseño aprobado. Capa backend entregada (sin UI todavía):
+
+- **Roles GLOBALes** (sin Teams); **permisos definidos solo en código** (catálogo
+  en `RolePermissionSeeder`). El módulo gestiona qué permisos tiene cada rol, no
+  permite crear permisos desde la UI.
+- **Solo `roles.manage`** (SuperAdministrador) gestiona roles; el
+  **AdministradorCongregación no gestiona** roles ni permisos (solo `roles.assign`
+  para asignar roles existentes a sus usuarios).
+- **Roles de sistema protegidos** (`SuperAdministrador`, `AdministradorCongregacion`,
+  `Usuario`): no se renombran ni eliminan (columna `roles.is_system`). El
+  **SuperAdministrador conserva siempre todos los permisos**.
+- **Eliminar rol personalizado con usuarios:** exige rol destino (`reassign_to`);
+  reasigna los usuarios (un rol por usuario) y luego elimina.
+- **Duplicar rol:** clona los permisos en un rol personalizado nuevo.
+- **Auditoría (`audit_logs`):** `role.created`, `role.updated` (solo cambios),
+  `role.duplicated`, `role.deleted` (con datos de reasignación).
+- **Modelo:** `App\Models\Role` (extiende el de spatie) con `is_system`,
+  `description` e `isSystem()`; `config/permission.php` apunta a este modelo.
+- **Cobertura:** 11 pruebas de feature (autorización, unicidad, protección de
+  roles de sistema, duplicado, eliminación con reasignación y auditoría).
+- **Pendiente (UI):** listado de roles con **nº de permisos**, **nº de usuarios**
+  e indicador **Sistema/Personalizado**, asistente de reasignación y formularios
+  (Bootstrap 5 + Google Sans Flex).

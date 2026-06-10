@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +76,27 @@ Route::middleware('auth')->group(function () {
     Route::get('roles', [PlaceholderController::class, 'roles'])
         ->middleware('permission:roles.view')
         ->name('roles.index');
+
+    /*
+     | Módulo Roles y Permisos — acciones de escritura (solo `roles.manage`).
+     | Roles globales; los de sistema están protegidos (RolePolicy + Form Requests).
+     | El listado de roles (con contadores e indicadores) se entrega en la UI.
+     */
+    Route::post('roles', [RoleController::class, 'store'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.store');
+
+    Route::put('roles/{role}', [RoleController::class, 'update'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.update');
+
+    Route::post('roles/{role}/duplicar', [RoleController::class, 'duplicate'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.duplicate');
+
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.destroy');
 
     Route::get('configuracion', [PlaceholderController::class, 'settings'])
         ->name('settings.index');

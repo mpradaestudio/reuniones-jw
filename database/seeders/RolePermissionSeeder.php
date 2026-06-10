@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -47,10 +47,16 @@ class RolePermissionSeeder extends Seeder
 
         // SuperAdministrador: acceso global a todo.
         $superAdmin = Role::findOrCreate('SuperAdministrador', 'web');
+        $superAdmin->is_system = true;
+        $superAdmin->description = 'Acceso global a toda la plataforma.';
+        $superAdmin->save();
         $superAdmin->syncPermissions(Permission::all());
 
         // AdministradorCongregacion: gestiona su congregación (sin alta/baja global).
         $congregationAdmin = Role::findOrCreate('AdministradorCongregacion', 'web');
+        $congregationAdmin->is_system = true;
+        $congregationAdmin->description = 'Gestiona los usuarios de su congregación.';
+        $congregationAdmin->save();
         $congregationAdmin->syncPermissions([
             'dashboard.view',
             'users.view',
@@ -64,6 +70,9 @@ class RolePermissionSeeder extends Seeder
 
         // Usuario: acceso básico.
         $usuario = Role::findOrCreate('Usuario', 'web');
+        $usuario->is_system = true;
+        $usuario->description = 'Acceso básico al panel.';
+        $usuario->save();
         $usuario->syncPermissions([
             'dashboard.view',
         ]);

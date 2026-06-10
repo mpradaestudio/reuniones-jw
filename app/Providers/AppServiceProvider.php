@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Role;
 use App\Models\User;
+use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use App\Support\Tenant;
 use Illuminate\Pagination\Paginator;
@@ -27,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Autorización del módulo Usuarios (permiso Spatie + misma congregación).
         Gate::policy(User::class, UserPolicy::class);
+
+        // Autorización del módulo Roles y Permisos.
+        Gate::policy(Role::class, RolePolicy::class);
 
         // Paginación con marcado de Bootstrap 5 (stack de UI aprobado).
         Paginator::useBootstrapFive();
