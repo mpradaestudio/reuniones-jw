@@ -73,26 +73,47 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:users.reset-password')
         ->name('users.reset-password');
 
-    Route::get('roles', [PlaceholderController::class, 'roles'])
+    Route::get('roles', [RoleController::class, 'index'])
         ->middleware('permission:roles.view')
         ->name('roles.index');
 
     /*
-     | Módulo Roles y Permisos — acciones de escritura (solo `roles.manage`).
+     | Módulo Roles y Permisos.
+     | Lectura: `roles.view`. Gestión (alta/edición/duplicado/eliminación): `roles.manage`.
      | Roles globales; los de sistema están protegidos (RolePolicy + Form Requests).
-     | El listado de roles (con contadores e indicadores) se entrega en la UI.
+     | La ruta `roles/crear` se declara antes de `roles/{role}` para evitar colisión.
      */
+    Route::get('roles/crear', [RoleController::class, 'create'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.create');
+
     Route::post('roles', [RoleController::class, 'store'])
         ->middleware('permission:roles.manage')
         ->name('roles.store');
+
+    Route::get('roles/{role}', [RoleController::class, 'show'])
+        ->middleware('permission:roles.view')
+        ->name('roles.show');
+
+    Route::get('roles/{role}/editar', [RoleController::class, 'edit'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.edit');
 
     Route::put('roles/{role}', [RoleController::class, 'update'])
         ->middleware('permission:roles.manage')
         ->name('roles.update');
 
+    Route::get('roles/{role}/duplicar', [RoleController::class, 'duplicateForm'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.duplicate-form');
+
     Route::post('roles/{role}/duplicar', [RoleController::class, 'duplicate'])
         ->middleware('permission:roles.manage')
         ->name('roles.duplicate');
+
+    Route::get('roles/{role}/eliminar', [RoleController::class, 'confirmDelete'])
+        ->middleware('permission:roles.manage')
+        ->name('roles.delete-form');
 
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])
         ->middleware('permission:roles.manage')

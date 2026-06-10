@@ -269,6 +269,10 @@ Diseño aprobado. Capa backend entregada (sin UI todavía):
   `description` e `isSystem()`; `config/permission.php` apunta a este modelo.
 - **Cobertura:** 11 pruebas de feature (autorización, unicidad, protección de
   roles de sistema, duplicado, eliminación con reasignación y auditoría).
-- **Pendiente (UI):** listado de roles con **nº de permisos**, **nº de usuarios**
-  e indicador **Sistema/Personalizado**, asistente de reasignación y formularios
-  (Bootstrap 5 + Google Sans Flex).
+- **UI (Bootstrap 5 + Google Sans Flex):** listado con **nº de permisos**,
+  **nº de usuarios** e indicador **Sistema/Personalizado**; detalle con permisos
+  agrupados por módulo y usuarios; formularios de crear/editar (checkboxes de
+  permisos por módulo; nombre inmutable en roles de sistema); duplicar rol; y
+  **asistente de reasignación** al eliminar (selector de rol destino que excluye
+  el propio rol y el rol global SuperAdministrador). `roles.view` permite ver
+  (solo lectura); `roles.manage` habilita la gestión.

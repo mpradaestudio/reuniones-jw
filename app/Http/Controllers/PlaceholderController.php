@@ -19,14 +19,6 @@ class PlaceholderController extends Controller
         ]);
     }
 
-    public function roles(): View
-    {
-        return view('placeholder', [
-            'title' => 'Roles',
-            'description' => 'El módulo de gestión de roles y permisos se implementará próximamente.',
-        ]);
-    }
-
     public function settings(): View
     {
         return view('placeholder', [
