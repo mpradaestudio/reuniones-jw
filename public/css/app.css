@@ -1,0 +1,143 @@
+/*
+|--------------------------------------------------------------------------
+| app.css — Estilos globales de Reuniones JW
+|--------------------------------------------------------------------------
+| Se carga DESPUÉS de Bootstrap 5 para poder sobrescribir sus variables.
+| Centraliza la tipografía (Google Sans Flex) y las variables de marca.
+*/
+
+:root {
+    /* Tipografía principal: Google Sans Flex con fallback al sistema. */
+    --rjw-font-primary: "Google Sans Flex", "Google Sans", "Roboto",
+        system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+
+    /* Paleta de marca */
+    --rjw-primary: #1f2a37;          /* Azul pizarra oscuro */
+    --rjw-primary-rgb: 31, 42, 55;
+    --rjw-accent: #2563eb;           /* Azul de acento */
+    --rjw-sidebar-bg: #1f2a37;
+    --rjw-sidebar-fg: #cbd5e1;
+    --rjw-sidebar-fg-active: #ffffff;
+    --rjw-sidebar-active-bg: rgba(255, 255, 255, 0.08);
+    --rjw-body-bg: #f3f4f6;
+
+    /* Métricas de layout */
+    --rjw-sidebar-width: 16rem;
+    --rjw-navbar-height: 3.5rem;
+
+    /* Sobrescribe la fuente base de Bootstrap */
+    --bs-body-font-family: var(--rjw-font-primary);
+    --bs-body-bg: var(--rjw-body-bg);
+}
+
+body {
+    font-family: var(--rjw-font-primary);
+    background-color: var(--rjw-body-bg);
+}
+
+/* ----------------------------- Navbar ----------------------------- */
+.rjw-navbar {
+    background-color: var(--rjw-primary);
+    min-height: var(--rjw-navbar-height);
+}
+
+.rjw-navbar .navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+/* ----------------------------- Sidebar ---------------------------- */
+.rjw-sidebar {
+    background-color: var(--rjw-sidebar-bg);
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .rjw-sidebar {
+        width: var(--rjw-sidebar-width);
+        min-height: calc(100vh - var(--rjw-navbar-height));
+    }
+}
+
+.rjw-sidebar .nav-link {
+    color: var(--rjw-sidebar-fg);
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    margin: 0.15rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+}
+
+.rjw-sidebar .nav-link:hover {
+    color: var(--rjw-sidebar-fg-active);
+    background-color: var(--rjw-sidebar-active-bg);
+}
+
+.rjw-sidebar .nav-link.active {
+    color: var(--rjw-sidebar-fg-active);
+    background-color: var(--rjw-accent);
+}
+
+.rjw-sidebar .sidebar-heading {
+    color: rgba(203, 213, 225, 0.6);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.rjw-sidebar .nav-link .bi {
+    width: 1.1rem;
+    text-align: center;
+}
+
+/* ----------------------------- Contenido -------------------------- */
+.rjw-content {
+    min-height: calc(100vh - var(--rjw-navbar-height));
+    display: flex;
+    flex-direction: column;
+}
+
+.rjw-main {
+    flex: 1 0 auto;
+    padding: 1.5rem;
+}
+
+/* ----------------------------- Footer ----------------------------- */
+.rjw-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    color: #6b7280;
+    font-size: 0.85rem;
+    padding: 1rem 1.5rem;
+}
+
+/* ----------------------------- Tarjetas --------------------------- */
+.rjw-stat-card .rjw-stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.rjw-stat-icon {
+    width: 3rem;
+    height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+/* ----------------------------- Auth ------------------------------- */
+.rjw-auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1f2a37 0%, #111827 100%);
+    padding: 1rem;
+}

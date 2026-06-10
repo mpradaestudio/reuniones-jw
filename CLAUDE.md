@@ -134,7 +134,30 @@ Reglas:
 
 ---
 
-## 10. Resumen de decisiones aprobadas
+## 10. Frontend / Interfaz de usuario
+
+- **Framework de UI oficial: Bootstrap 5** (cargado por CDN, sin paso de build,
+  para compatibilidad directa con XAMPP).
+- **Tipografía principal global: Google Sans Flex** (Google Fonts), con pila de
+  respaldo del sistema (`Google Sans`, `Roboto`, `system-ui`, …) por si la fuente
+  no carga. Se aplica vía la variable `--bs-body-font-family`.
+- **Layout maestro:** `resources/views/layouts/app.blade.php` (páginas
+  autenticadas) y `resources/views/layouts/guest.blade.php` (páginas de acceso).
+- **Elementos centralizados** (no duplicar en las vistas):
+  - Bootstrap 5 y Bootstrap Icons.
+  - Google Sans Flex.
+  - **Navbar**, **Sidebar** y **Footer** como parciales en
+    `resources/views/layouts/partials/`.
+  - **Variables CSS globales** y estilos del proyecto en `public/css/app.css`
+    (paleta de marca, métricas de layout, navbar/sidebar/footer).
+- **Responsive:** el sidebar usa `offcanvas-lg` de Bootstrap (menú lateral fijo en
+  escritorio, desplegable en móvil).
+- Las vistas de negocio deben **extender el layout maestro** y usar componentes de
+  Bootstrap; evitar CSS inline salvo casos puntuales.
+
+---
+
+## 11. Resumen de decisiones aprobadas
 
 1. **Congregaciones:** sin borrado físico; **SoftDeletes** (`deleted_at`);
    desactivación lógica; FK `users.congregation_id` con **ON DELETE RESTRICT**.
@@ -147,12 +170,14 @@ Reglas:
 5. **RBAC:** spatie/laravel-permission, **sin Teams**; 1 usuario → 1 congregación.
 6. **Auditoría:** tabla `audit_logs` creada desde el MVP.
 7. **PDF:** DomPDF + Blade (HTML/CSS), sin librerías de pago.
+8. **Frontend:** Bootstrap 5 + Google Sans Flex; layout maestro con navbar,
+   sidebar, footer y variables CSS centralizados.
 
 ---
 
-## 11. Estado actual
+## 12. Estado actual
 
-Rama `feature/estructura-laravel`: implementación de la **estructura base**
-(Laravel 12, MySQL, Spatie, DomPDF, migraciones iniciales, modelos, seeders,
-login/logout y dashboard básico). **Sin CRUD de negocio** todavía (pendiente de
-validación de la arquitectura ya aprobada).
+Rama `feature/frontend-base`: base visual del proyecto (Bootstrap 5, Google Sans
+Flex, layout maestro con navbar/sidebar/footer, variables CSS globales y dashboard
+sobre el layout base). **Sin CRUD de negocio** todavía (pendiente de validación de
+la arquitectura visual y el layout base).
