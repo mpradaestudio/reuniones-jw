@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\CongregationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
 use Illuminate\Support\Facades\Auth;
@@ -34,9 +35,30 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
 
-    Route::get('congregaciones', [PlaceholderController::class, 'congregations'])
-        ->middleware('permission:congregations.view')
-        ->name('congregations.index');
+    /*
+    | Módulo Congregaciones (SuperAdministrador) — CRUD + estado + papelera.
+    */
+    Route::middleware('permission:congregations.view')->group(function () {
+        Route::get('congregaciones', [CongregationController::class, 'index'])->name('congregations.index');
+    });
+
+    Route::get('congregaciones/crear', [CongregationController::class, 'create'])
+        ->middleware('permission:congregations.create')->name('congregations.create');
+    Route::post('congregaciones', [CongregationController::class, 'store'])
+        ->middleware('permission:congregations.create')->name('congregations.store');
+
+    Route::get('congregaciones/{congregation}/editar', [CongregationController::class, 'edit'])
+        ->middleware('permission:congregations.update')->name('congregations.edit');
+    Route::put('congregaciones/{congregation}', [CongregationController::class, 'update'])
+        ->middleware('permission:congregations.update')->name('congregations.update');
+
+    Route::patch('congregaciones/{congregation}/estado', [CongregationController::class, 'updateStatus'])
+        ->middleware('permission:congregations.toggle-status')->name('congregations.status');
+
+    Route::delete('congregaciones/{congregation}', [CongregationController::class, 'destroy'])
+        ->middleware('permission:congregations.delete')->name('congregations.destroy');
+    Route::patch('congregaciones/{congregation}/restaurar', [CongregationController::class, 'restore'])
+        ->middleware('permission:congregations.delete')->name('congregations.restore')->withTrashed();
 
     Route::get('usuarios', [PlaceholderController::class, 'users'])
         ->middleware('permission:users.view')

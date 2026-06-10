@@ -141,3 +141,14 @@ body {
     background: linear-gradient(135deg, #1f2a37 0%, #111827 100%);
     padding: 1rem;
 }
+
+
+/* Tarjeta de estadística enlazable (dashboard) */
+.rjw-stat-link {
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.rjw-stat-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
