@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use App\Support\Tenant;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
@@ -64,7 +65,7 @@ class LoginRequest extends FormRequest
      */
     protected function enforceTenantBoundary(): void
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         // El SuperAdministrador puede acceder desde cualquier subdominio / área global.

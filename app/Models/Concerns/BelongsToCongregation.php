@@ -21,7 +21,7 @@ trait BelongsToCongregation
 {
     public static function bootBelongsToCongregation(): void
     {
-        static::addGlobalScope(new CongregationScope());
+        static::addGlobalScope(new CongregationScope);
 
         static::creating(function ($model) {
             if (! empty($model->congregation_id)) {
