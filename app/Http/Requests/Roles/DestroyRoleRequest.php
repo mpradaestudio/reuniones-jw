@@ -5,6 +5,7 @@ namespace App\Http\Requests\Roles;
 use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * Validación para eliminar un rol.
@@ -13,6 +14,10 @@ use Illuminate\Validation\Rule;
  * rol tiene usuarios asignados, se exige un rol destino (`reassign_to`) para
  * reasignarlos antes de eliminar; esa comprobación se realiza en el controlador
  * (necesita contar usuarios).
+ *
+ * El rol destino puede ser cualquier rol existente (incluidos `Usuario` y
+ * `AdministradorCongregacion`) EXCEPTO el rol global `SuperAdministrador`, para
+ * evitar una escalada de privilegios al reasignar usuarios de congregación.
  */
 class DestroyRoleRequest extends FormRequest
 {
@@ -49,5 +54,20 @@ class DestroyRoleRequest extends FormRequest
         return [
             'reassign_to.not_in' => 'El rol destino debe ser distinto del rol que se elimina.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $superAdminRole = config('tenancy.super_admin_role', 'SuperAdministrador');
+
+            // No se permite reasignar usuarios al rol global SuperAdministrador.
+            if ($this->input('reassign_to') === $superAdminRole) {
+                $validator->errors()->add(
+                    'reassign_to',
+                    'No se pueden reasignar usuarios al rol SuperAdministrador.'
+                );
+            }
+        });
     }
 }

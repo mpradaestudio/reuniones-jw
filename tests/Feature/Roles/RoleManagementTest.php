@@ -243,4 +243,44 @@ class RoleManagementTest extends TestCase
         $this->assertSame('Usuario', $log->new_values['reassigned_to']);
         $this->assertContains($member->id, $log->new_values['reassigned_users']);
     }
+
+    public function test_cannot_reassign_users_to_super_administrator_role(): void
+    {
+        $congregation = Congregation::factory()->create();
+        $super = $this->makeUser('SuperAdministrador', null);
+        $role = $this->customRole('Coordinador', ['dashboard.view']);
+
+        $member = $this->makeUser('Usuario', $congregation->id);
+        $member->syncRoles(['Coordinador']);
+
+        $this->from(route('roles.index'))
+            ->actingAs($super)
+            ->delete(route('roles.destroy', $role), ['reassign_to' => 'SuperAdministrador'])
+            ->assertSessionHasErrors('reassign_to');
+
+        // El rol no se elimina y el usuario no escala a SuperAdministrador.
+        $this->assertDatabaseHas('roles', ['id' => $role->id]);
+        $member->refresh();
+        $this->assertTrue($member->hasRole('Coordinador'));
+        $this->assertFalse($member->hasRole('SuperAdministrador'));
+    }
+
+    public function test_can_reassign_users_to_a_non_global_system_role(): void
+    {
+        $congregation = Congregation::factory()->create();
+        $super = $this->makeUser('SuperAdministrador', null);
+        $role = $this->customRole('Coordinador', ['dashboard.view']);
+
+        $member = $this->makeUser('Usuario', $congregation->id);
+        $member->syncRoles(['Coordinador']);
+
+        $this->actingAs($super)
+            ->delete(route('roles.destroy', $role), ['reassign_to' => 'AdministradorCongregacion'])
+            ->assertRedirect(route('roles.index'));
+
+        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+        $member->refresh();
+        $this->assertCount(1, $member->getRoleNames());
+        $this->assertTrue($member->hasRole('AdministradorCongregacion'));
+    }
 }
