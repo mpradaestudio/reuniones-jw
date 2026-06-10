@@ -32,6 +32,7 @@ class RolePermissionSeeder extends Seeder
             'users.create',
             'users.update',
             'users.toggle-status',
+            'users.reset-password',
             // Roles
             'roles.view',
             'roles.assign',
@@ -56,6 +57,7 @@ class RolePermissionSeeder extends Seeder
             'users.create',
             'users.update',
             'users.toggle-status',
+            'users.reset-password',
             'roles.view',
             'roles.assign',
         ]);

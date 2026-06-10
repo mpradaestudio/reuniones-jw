@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,28 @@ Route::middleware('auth')->group(function () {
     Route::get('usuarios', [PlaceholderController::class, 'users'])
         ->middleware('permission:users.view')
         ->name('users.index');
+
+    /*
+     | Módulo Usuarios — capa backend (acciones de escritura).
+     | Cada ruta valida el permiso de Spatie y, además, la UserPolicy
+     | (misma congregación) a través de los Form Requests / authorize().
+     | Las vistas/listados/formularios se construirán en una capa posterior.
+     */
+    Route::post('usuarios', [UserController::class, 'store'])
+        ->middleware('permission:users.create')
+        ->name('users.store');
+
+    Route::put('usuarios/{user}', [UserController::class, 'update'])
+        ->middleware('permission:users.update')
+        ->name('users.update');
+
+    Route::patch('usuarios/{user}/estado', [UserController::class, 'toggleStatus'])
+        ->middleware('permission:users.toggle-status')
+        ->name('users.toggle-status');
+
+    Route::patch('usuarios/{user}/restablecer-clave', [UserController::class, 'resetPassword'])
+        ->middleware('permission:users.reset-password')
+        ->name('users.reset-password');
 
     Route::get('roles', [PlaceholderController::class, 'roles'])
         ->middleware('permission:roles.view')

@@ -26,7 +26,13 @@ arquitectura base.
 | Entorno local        | XAMPP                              |
 | RBAC                 | spatie/laravel-permission          |
 | PDF                  | barryvdh/laravel-dompdf            |
+| Frontend (CSS)       | Bootstrap 5                        |
+| Tipografía           | Google Sans Flex                   |
 | Control de versiones | GitHub (repo: `reuniones-jw`)      |
+
+> **Interfaz de usuario:** la capa visual usa **Bootstrap 5** como framework CSS
+> y **Google Sans Flex** como tipografía base. (Decisión aprobada; las vistas se
+> construyen en una capa posterior al backend.)
 
 ---
 
@@ -39,6 +45,44 @@ arquitectura base.
   modificar la arquitectura.
 - **Spatie Teams**: NO se activa por ahora. Cada usuario pertenece a una sola
   congregación.
+
+### Catálogo de permisos
+
+Convención de nombres: `modulo.accion` (en inglés, estilo punto). Catálogo actual:
+
+| Módulo        | Permisos                                                                                  |
+|---------------|-------------------------------------------------------------------------------------------|
+| Congregations | `congregations.view`, `congregations.create`, `congregations.update`, `congregations.toggle-status` |
+| Users         | `users.view`, `users.create`, `users.update`, `users.toggle-status`, `users.reset-password` |
+| Roles         | `roles.view`, `roles.assign`, `roles.manage`                                              |
+| Dashboard     | `dashboard.view`                                                                          |
+
+- **`users.reset-password` es un permiso INDEPENDIENTE**, no implícito en
+  `users.update`. Restablecer la contraseña de otro usuario es una acción
+  sensible que se concede por separado.
+- Asignación: el `SuperAdministrador` tiene todos los permisos;
+  `AdministradorCongregacion` gestiona usuarios de su congregación
+  (`users.*` incluido `users.reset-password`, `roles.assign`, `dashboard.view`).
+
+### Módulo Usuarios — reglas aprobadas
+
+- **Email único global:** el `email` es único en toda la plataforma; la unicidad
+  **no** se acota por congregación.
+- **Usuario inactivo no puede iniciar sesión:** el login solo autentica usuarios
+  con `estado = active` (aplicado en `LoginRequest`).
+- **Un rol por usuario (en la UI):** cada usuario tiene exactamente un rol; al
+  crear/editar se envía un único `role` y se aplica con `syncRoles([$role])`.
+- **Último AdministradorCongregación protegido:** no se puede desactivar ni
+  degradar al único `AdministradorCongregacion` activo de una congregación (debe
+  quedar siempre al menos uno).
+- Un usuario **no** puede cambiar su propio estado (evita autobloqueo).
+- Autorización en `UserPolicy`: verifica el permiso de Spatie **y** que el
+  recurso pertenezca a la misma congregación (el `SuperAdministrador` omite el
+  filtro). Defensa en profundidad: middleware `permission:` (ruta) + Policy
+  (acción) + Form Requests (entrada).
+- **Capa actual:** backend (Policy, Form Requests, controlador de acciones,
+  rutas protegidas y pruebas de autorización). **Sin vistas, tablas ni
+  formularios** todavía.
 
 ### Aislamiento multi-congregación
 
@@ -145,14 +189,25 @@ Reglas:
 4. **Validación estricta de tenant:** el usuario solo inicia sesión en el
    subdominio de su congregación; **SuperAdministrador** es la única excepción.
 5. **RBAC:** spatie/laravel-permission, **sin Teams**; 1 usuario → 1 congregación.
-6. **Auditoría:** tabla `audit_logs` creada desde el MVP.
-7. **PDF:** DomPDF + Blade (HTML/CSS), sin librerías de pago.
+   **Un rol por usuario** en la UI. `users.reset-password` es un permiso
+   **independiente** de `users.update`.
+6. **Módulo Usuarios:** email **único global**; usuario **inactivo no puede
+   iniciar sesión**; **último AdministradorCongregación protegido** (no se puede
+   desactivar/degradar si es el único activo de su congregación).
+7. **Auditoría:** tabla `audit_logs` creada desde el MVP.
+8. **PDF:** DomPDF + Blade (HTML/CSS), sin librerías de pago.
+9. **UI:** **Bootstrap 5** + tipografía **Google Sans Flex**.
 
 ---
 
 ## 11. Estado actual
 
-Rama `feature/estructura-laravel`: implementación de la **estructura base**
+Rama `feature/estructura-laravel` (mergeada): **estructura base**
 (Laravel 12, MySQL, Spatie, DomPDF, migraciones iniciales, modelos, seeders,
-login/logout y dashboard básico). **Sin CRUD de negocio** todavía (pendiente de
-validación de la arquitectura ya aprobada).
+login/logout y dashboard básico).
+
+Rama `feature/usuarios`: **capa backend base del módulo Usuarios**:
+`UserPolicy`, permiso `users.reset-password`, Form Requests
+(`StoreUserRequest`, `UpdateUserRequest`, `ResetUserPasswordRequest`),
+`UserController` (acciones de escritura) con rutas protegidas y pruebas de
+autorización. **Sin vistas, tablas ni formularios** (se construyen después).
