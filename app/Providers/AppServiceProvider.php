@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
+use App\Policies\AuditLogPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use App\Support\Tenant;
@@ -32,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Autorización del módulo Roles y Permisos.
         Gate::policy(Role::class, RolePolicy::class);
+
+        // Autorización del módulo Auditoría (solo lectura + aislamiento por congregación).
+        Gate::policy(AuditLog::class, AuditLogPolicy::class);
 
         // Paginación con marcado de Bootstrap 5 (stack de UI aprobado).
         Paginator::useBootstrapFive();

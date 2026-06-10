@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
@@ -118,6 +119,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])
         ->middleware('permission:roles.manage')
         ->name('roles.destroy');
+
+    /*
+     | Módulo Auditoría (solo lectura).
+     | Lectura del historial de `audit_logs`: `audit.view`.
+     | SuperAdministrador ve toda la auditoría; AdministradorCongregacion solo la
+     | de su congregación (aislamiento en AuditLogController + AuditLogPolicy).
+     | IP y user agent solo se muestran en el detalle.
+     */
+    Route::get('auditoria', [AuditLogController::class, 'index'])
+        ->middleware('permission:audit.view')
+        ->name('audit.index');
+
+    Route::get('auditoria/{auditLog}', [AuditLogController::class, 'show'])
+        ->middleware('permission:audit.view')
+        ->name('audit.show');
 
     Route::get('configuracion', [PlaceholderController::class, 'settings'])
         ->name('settings.index');
