@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
 @section('title', $title)
+@section('page-heading', $title)
 
 @section('content')
-    <div class="rounded-xl bg-white p-8 shadow-sm">
-        <div class="flex items-center gap-3">
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="rjw-stat-icon bg-secondary">
+                    <i class="bi bi-cone-striped"></i>
+                </span>
+                <h2 class="h5 fw-semibold mb-0">{{ $title }}</h2>
+            </div>
+            <p class="text-muted">{{ $description }}</p>
+            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                En construcción
             </span>
-            <h2 class="text-lg font-semibold text-gray-800">{{ $title }}</h2>
         </div>
-        <p class="mt-4 text-sm text-gray-600">{{ $description }}</p>
-        <span class="mt-4 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
-            En construcción
-        </span>
     </div>
 @endsection
