@@ -19,7 +19,7 @@ arquitectura base.
 
 | Capa                 | Tecnología                          |
 |----------------------|-------------------------------------|
-| Backend              | PHP 8.2+                            |
+| Backend              | PHP 8.3 (estándar oficial)          |
 | Framework            | Laravel 12                          |
 | Base de datos        | MySQL                              |
 | Servidor web         | Apache                             |
@@ -177,6 +177,9 @@ Reglas:
 7. **PDF:** DomPDF + Blade (HTML/CSS), sin librerías de pago.
 8. **Frontend:** Bootstrap 5 + Google Sans Flex; layout maestro con navbar,
    sidebar, footer y variables CSS centralizados.
+9. **PHP:** versión oficial **8.3**, fijada en `composer.json` vía
+   `config.platform.php` y `"php": "^8.3"`. El `composer.lock` se resuelve para
+   8.3 (Symfony 7.x); evitar PHP 8.2 (no instala) y no adoptar 8.4 como estándar.
 
 ---
 
