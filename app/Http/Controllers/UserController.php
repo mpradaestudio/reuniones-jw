@@ -8,8 +8,11 @@ use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 /**
  * Capa backend del módulo Usuarios.
@@ -26,6 +29,74 @@ use Illuminate\Validation\ValidationException;
  */
 class UserController extends Controller
 {
+    /**
+     * Listado de usuarios con búsqueda, filtros y paginación (Bootstrap 5).
+     *
+     * Aislamiento por congregación: un usuario no global solo ve los usuarios de
+     * su propia congregación; el SuperAdministrador ve todos. La autorización se
+     * resuelve con la UserPolicy (`viewAny`).
+     */
+    public function index(Request $request): View
+    {
+        $this->authorize('viewAny', User::class);
+
+        $actor = $request->user();
+        $superAdminRole = config('tenancy.super_admin_role', 'SuperAdministrador');
+
+        $search = trim((string) $request->query('q', ''));
+        $estado = (string) $request->query('estado', '');
+        $role = (string) $request->query('role', '');
+
+        $query = User::query()->with(['roles', 'congregation']);
+
+        // El SuperAdministrador ve todas las congregaciones; el resto, solo la suya.
+        if (! $actor->isSuperAdmin()) {
+            $query->where('congregation_id', $actor->congregation_id);
+        }
+
+        // Búsqueda por nombre, apellidos o email.
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
+                    ->orWhere('apellidos', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por estado.
+        if (in_array($estado, [UserStatus::Active->value, UserStatus::Inactive->value], true)) {
+            $query->where('estado', $estado);
+        }
+
+        // Filtro por rol.
+        if ($role !== '') {
+            $query->whereHas('roles', fn ($q) => $q->where('name', $role));
+        }
+
+        $users = $query
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->paginate(15)
+            ->withQueryString();
+
+        // Roles disponibles para el filtro (el rol global solo lo ve el SuperAdmin).
+        $roles = Role::query()
+            ->when(! $actor->isSuperAdmin(), fn ($q) => $q->where('name', '!=', $superAdminRole))
+            ->orderBy('name')
+            ->pluck('name');
+
+        return view('users.index', [
+            'users' => $users,
+            'roles' => $roles,
+            'statuses' => UserStatus::options(),
+            'filters' => [
+                'q' => $search,
+                'estado' => $estado,
+                'role' => $role,
+            ],
+        ]);
+    }
+
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $data = $request->validated();

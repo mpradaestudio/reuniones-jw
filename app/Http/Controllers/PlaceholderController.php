@@ -19,14 +19,6 @@ class PlaceholderController extends Controller
         ]);
     }
 
-    public function users(): View
-    {
-        return view('placeholder', [
-            'title' => 'Usuarios',
-            'description' => 'El módulo de gestión de usuarios se implementará próximamente.',
-        ]);
-    }
-
     public function roles(): View
     {
         return view('placeholder', [

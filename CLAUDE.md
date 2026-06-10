@@ -211,3 +211,14 @@ Rama `feature/usuarios`: **capa backend base del módulo Usuarios**:
 (`StoreUserRequest`, `UpdateUserRequest`, `ResetUserPasswordRequest`),
 `UserController` (acciones de escritura) con rutas protegidas y pruebas de
 autorización. **Sin vistas, tablas ni formularios** (se construyen después).
+
+Rama `feature/usuarios-listado`: **listado de usuarios (UI)**:
+`UserController@index` con **búsqueda** (nombre/apellidos/email), **filtros**
+(estado y rol), **paginación Bootstrap 5** y aislamiento por congregación
+(`viewAny` de la `UserPolicy`). **Aún sin formularios de alta/edición.**
+
+> **Nota de UI (Bootstrap 5):** el andamiaje inicial usaba Tailwind por CDN. Para
+> cumplir la decisión aprobada (Bootstrap 5 + Google Sans Flex), el panel se
+> migró a **Bootstrap 5**: se actualizaron el layout compartido
+> (`layouts/app.blade.php`) y las vistas que dependen de él (`dashboard`,
+> `placeholder`, `auth/login`), y se activó `Paginator::useBootstrapFive()`.

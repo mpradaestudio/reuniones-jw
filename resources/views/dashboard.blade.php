@@ -4,34 +4,39 @@
 
 @section('content')
     @php($cards = [
-        ['label' => 'Total congregaciones', 'value' => $metrics['congregations_total'], 'accent' => 'bg-blue-500'],
-        ['label' => 'Congregaciones activas', 'value' => $metrics['congregations_active'], 'accent' => 'bg-emerald-500'],
-        ['label' => 'Total usuarios', 'value' => $metrics['users_total'], 'accent' => 'bg-indigo-500'],
-        ['label' => 'Usuarios activos', 'value' => $metrics['users_active'], 'accent' => 'bg-amber-500'],
+        ['label' => 'Total congregaciones', 'value' => $metrics['congregations_total'], 'accent' => 'text-bg-primary'],
+        ['label' => 'Congregaciones activas', 'value' => $metrics['congregations_active'], 'accent' => 'text-bg-success'],
+        ['label' => 'Total usuarios', 'value' => $metrics['users_total'], 'accent' => 'text-bg-info'],
+        ['label' => 'Usuarios activos', 'value' => $metrics['users_active'], 'accent' => 'text-bg-warning'],
     ])
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="row g-3">
         @foreach($cards as $card)
-            <div class="overflow-hidden rounded-xl bg-white shadow-sm">
-                <div class="flex items-center gap-4 p-5">
-                    <span class="inline-flex h-12 w-12 flex-none items-center justify-center rounded-lg {{ $card['accent'] }} text-lg font-bold text-white">
-                        {{ $card['value'] }}
-                    </span>
-                    <div>
-                        <p class="text-sm text-gray-500">{{ $card['label'] }}</p>
-                        <p class="text-2xl font-semibold text-gray-800">{{ $card['value'] }}</p>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded {{ $card['accent'] }} fw-bold"
+                              style="width: 48px; height: 48px;">
+                            {{ $card['value'] }}
+                        </span>
+                        <div>
+                            <p class="mb-0 small text-secondary">{{ $card['label'] }}</p>
+                            <p class="mb-0 fs-4 fw-semibold text-dark">{{ $card['value'] }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
         @endforeach
     </div>
 
-    <div class="mt-8 rounded-xl bg-white p-6 shadow-sm">
-        <h2 class="text-base font-semibold text-gray-800">Bienvenido</h2>
-        <p class="mt-2 text-sm text-gray-600">
-            Este es el panel inicial de <strong>Reuniones JW</strong>. Los módulos de
-            gestión (Congregaciones, Usuarios, Roles) se irán habilitando conforme se
-            implementen sus funcionalidades.
-        </p>
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-body">
+            <h2 class="h6 fw-semibold text-dark">Bienvenido</h2>
+            <p class="mb-0 small text-secondary">
+                Este es el panel inicial de <strong>Reuniones JW</strong>. Los módulos de
+                gestión (Congregaciones, Usuarios, Roles) se irán habilitando conforme se
+                implementen sus funcionalidades.
+            </p>
+        </div>
     </div>
 @endsection

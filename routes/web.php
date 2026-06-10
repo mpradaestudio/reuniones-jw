@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:congregations.view')
         ->name('congregations.index');
 
-    Route::get('usuarios', [PlaceholderController::class, 'users'])
+    Route::get('usuarios', [UserController::class, 'index'])
         ->middleware('permission:users.view')
         ->name('users.index');
 
@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
      | Módulo Usuarios — capa backend (acciones de escritura).
      | Cada ruta valida el permiso de Spatie y, además, la UserPolicy
      | (misma congregación) a través de los Form Requests / authorize().
-     | Las vistas/listados/formularios se construirán en una capa posterior.
+     | Los formularios de alta/edición se construirán en una capa posterior.
      */
     Route::post('usuarios', [UserController::class, 'store'])
         ->middleware('permission:users.create')
