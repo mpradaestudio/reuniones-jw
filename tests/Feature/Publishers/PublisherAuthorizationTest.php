@@ -117,9 +117,16 @@ class PublisherAuthorizationTest extends TestCase
         $admin     = $this->makeUser('AdministradorCongregacion', $congA->id);
         $publisher = $this->makePublisher($congB->id);
 
+        // El CongregationScope (Global Scope de Publisher) oculta registros de
+        // otras congregaciones al hacer el route model binding. El resultado es
+        // 404 (el recurso no existe en el scope del actor), no 403.
+        // Esto es deliberado: la primera línea de defensa es el scope, que
+        // impide siquiera saber que el publicador existe. La Policy es la
+        // segunda línea para recursos dentro del propio tenant.
+        // Contrasta con User (que no tiene Global Scope): allí la Policy devuelve 403.
         $this->actingAs($admin)
             ->put(route('publishers.update', $publisher), $this->validPayload())
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     public function test_admin_puede_editar_publicador_de_su_congregacion(): void
