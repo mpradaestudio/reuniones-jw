@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Congregation;
 use App\Models\User;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -172,7 +173,7 @@ class AuditLogController extends Controller
      */
     private function isValidDate(string $value): bool
     {
-        $date = \DateTime::createFromFormat('Y-m-d', $value);
+        $date = DateTime::createFromFormat('Y-m-d', $value);
 
         return $date !== false && $date->format('Y-m-d') === $value;
     }
