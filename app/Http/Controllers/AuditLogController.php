@@ -139,7 +139,7 @@ class AuditLogController extends Controller
      * Eventos distintos disponibles para el filtro, respetando el aislamiento
      * por congregación.
      *
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     private function availableEvents(User $actor): Collection
     {
@@ -155,7 +155,7 @@ class AuditLogController extends Controller
      * Tipos de entidad auditada disponibles para el filtro, respetando el
      * aislamiento por congregación.
      *
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     private function availableAuditableTypes(User $actor): Collection
     {
