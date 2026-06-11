@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -137,4 +138,31 @@ Route::middleware('auth')->group(function () {
 
     Route::get('configuracion', [PlaceholderController::class, 'settings'])
         ->name('settings.index');
+
+    /*
+     | Módulo Publicadores.
+     | Gestión de los miembros activos de la congregación.
+     | Lectura: publishers.view | Alta/edición/estado: publishers.create/update/toggle-status.
+     | Eliminación: publishers.delete (solo SuperAdministrador, decisión C).
+     | Protección del último anciano activo aplicada en el controlador (decisión D).
+     */
+    Route::get('publicadores', [PublisherController::class, 'index'])
+        ->middleware('permission:publishers.view')
+        ->name('publishers.index');
+
+    Route::post('publicadores', [PublisherController::class, 'store'])
+        ->middleware('permission:publishers.create')
+        ->name('publishers.store');
+
+    Route::put('publicadores/{publisher}', [PublisherController::class, 'update'])
+        ->middleware('permission:publishers.update')
+        ->name('publishers.update');
+
+    Route::patch('publicadores/{publisher}/estado', [PublisherController::class, 'toggleStatus'])
+        ->middleware('permission:publishers.toggle-status')
+        ->name('publishers.toggle-status');
+
+    Route::delete('publicadores/{publisher}', [PublisherController::class, 'destroy'])
+        ->middleware('permission:publishers.delete')
+        ->name('publishers.destroy');
 });

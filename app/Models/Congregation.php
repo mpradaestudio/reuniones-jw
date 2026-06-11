@@ -41,6 +41,14 @@ class Congregation extends Model
     }
 
     /**
+     * Publicadores de la congregación.
+     */
+    public function publishers(): HasMany
+    {
+        return $this->hasMany(Publisher::class);
+    }
+
+    /**
      * Registros de auditoría de la congregación.
      */
     public function auditLogs(): HasMany

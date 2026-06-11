@@ -37,6 +37,12 @@ class RolePermissionSeeder extends Seeder
             'roles.view',
             'roles.assign',
             'roles.manage',
+            // Publicadores
+            'publishers.view',
+            'publishers.create',
+            'publishers.update',
+            'publishers.toggle-status',
+            'publishers.delete',
             // Auditoría (solo lectura)
             'audit.view',
             // Dashboard
@@ -68,6 +74,10 @@ class RolePermissionSeeder extends Seeder
             'users.reset-password',
             'roles.view',
             'roles.assign',
+            'publishers.view',
+            'publishers.create',
+            'publishers.update',
+            'publishers.toggle-status',
             'audit.view',
         ]);
 
