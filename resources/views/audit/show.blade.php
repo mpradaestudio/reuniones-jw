@@ -1,42 +1,107 @@
-{{--
-    PLACEHOLDER TEMPORAL — Módulo Auditoría (PR A: backend).
+@extends('layouts.app')
 
-    Vista mínima sin estilos cuyo único objetivo es que la ruta `audit.show`
-    sea funcional y testeable en esta fase. La pantalla real (Bootstrap 5,
-    ficha del evento con diff antes/después) se implementará en el PR C.
+@section('title', 'Detalle de auditoría')
 
-    A diferencia del listado, el detalle SÍ muestra IP y user agent
-    (decisión aprobada).
---}}
-<h1>Auditoría — registro #{{ $log->id }}</h1>
+@section('content')
+    @php
+        $eventBadgeClass = function (string $event): string {
+            $action = \Illuminate\Support\Str::afterLast($event, '.');
 
-<dl>
-    <dt>Evento</dt>
-    <dd>{{ $log->event }}</dd>
+            return match ($action) {
+                'created', 'restored' => 'text-bg-success',
+                'updated' => 'text-bg-primary',
+                'duplicated' => 'text-bg-info',
+                'status_changed', 'password_reset' => 'text-bg-warning',
+                'deleted' => 'text-bg-danger',
+                default => 'text-bg-secondary',
+            };
+        };
 
-    <dt>Autor</dt>
-    <dd>{{ $log->user?->email ?? 'sistema' }}</dd>
+        $prettyJson = function ($values): ?string {
+            if (empty($values)) {
+                return null;
+            }
 
-    <dt>Congregación</dt>
-    <dd>{{ $log->congregation?->nombre ?? 'global' }}</dd>
+            return json_encode($values, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        };
+    @endphp
 
-    <dt>Entidad afectada</dt>
-    <dd>{{ $log->auditable_type ?? '—' }} {{ $log->auditable_id ? '#'.$log->auditable_id : '' }}</dd>
+    <div class="mb-3">
+        <a href="{{ route('audit.index') }}" class="text-decoration-none small text-secondary">&larr; Volver al listado</a>
+    </div>
 
-    <dt>Fecha</dt>
-    <dd>{{ $log->created_at }}</dd>
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                    <h2 class="h5 text-dark mb-1">
+                        <span class="badge {{ $eventBadgeClass($log->event) }} align-middle">{{ $log->event }}</span>
+                        <span class="text-secondary align-middle">Registro #{{ $log->id }}</span>
+                    </h2>
+                    <p class="text-secondary small mb-0">{{ $log->created_at?->format('d/m/Y H:i:s') }}</p>
+                </div>
+            </div>
 
-    <dt>IP</dt>
-    <dd>{{ $log->ip_address ?? '—' }}</dd>
+            <hr class="my-3">
 
-    <dt>User agent</dt>
-    <dd>{{ $log->user_agent ?? '—' }}</dd>
+            <dl class="row mb-0 small">
+                <dt class="col-sm-3 text-secondary">Autor</dt>
+                <dd class="col-sm-9 text-dark">
+                    @if($log->user)
+                        {{ $log->user->nombre_completo }} <span class="text-secondary">({{ $log->user->email }})</span>
+                    @else
+                        Sistema
+                    @endif
+                </dd>
 
-    <dt>Valores anteriores</dt>
-    <dd><pre>{{ $log->old_values ? json_encode($log->old_values, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '—' }}</pre></dd>
+                <dt class="col-sm-3 text-secondary">Congregación</dt>
+                <dd class="col-sm-9 text-dark">{{ $log->congregation?->nombre ?? 'Global' }}</dd>
 
-    <dt>Valores nuevos</dt>
-    <dd><pre>{{ $log->new_values ? json_encode($log->new_values, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '—' }}</pre></dd>
-</dl>
+                <dt class="col-sm-3 text-secondary">Entidad afectada</dt>
+                <dd class="col-sm-9 text-dark">
+                    @if($log->auditable_type)
+                        {{ class_basename($log->auditable_type) }}{{ $log->auditable_id ? ' #'.$log->auditable_id : '' }}
+                    @else
+                        —
+                    @endif
+                </dd>
 
-<p><a href="{{ route('audit.index') }}">Volver al listado</a></p>
+                <dt class="col-sm-3 text-secondary">Dirección IP</dt>
+                <dd class="col-sm-9 text-dark">{{ $log->ip_address ?? '—' }}</dd>
+
+                <dt class="col-sm-3 text-secondary">User-Agent</dt>
+                <dd class="col-sm-9 text-dark text-break">{{ $log->user_agent ?? '—' }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h3 class="h6 text-dark mb-3">Valores anteriores</h3>
+                    @php($old = $prettyJson($log->old_values))
+                    @if($old)
+                        <pre class="bg-light border rounded p-3 mb-0 small"><code>{{ $old }}</code></pre>
+                    @else
+                        <p class="text-secondary small mb-0">Sin datos previos.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h3 class="h6 text-dark mb-3">Valores nuevos</h3>
+                    @php($new = $prettyJson($log->new_values))
+                    @if($new)
+                        <pre class="bg-light border rounded p-3 mb-0 small"><code>{{ $new }}</code></pre>
+                    @else
+                        <p class="text-secondary small mb-0">Sin datos nuevos.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
