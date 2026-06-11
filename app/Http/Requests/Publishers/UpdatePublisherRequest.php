@@ -27,7 +27,6 @@ class UpdatePublisherRequest extends FormRequest
     {
         /** @var Publisher $publisher */
         $publisher = $this->route('publisher');
-        $actor = $this->user();
 
         return [
             'nombre' => ['required', 'string', 'max:100'],
@@ -50,7 +49,7 @@ class UpdatePublisherRequest extends FormRequest
             'user_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id')->where(function ($query) use ($actor, $publisher) {
+                Rule::exists('users', 'id')->where(function ($query) use ($publisher) {
                     $query->where('congregation_id', $publisher->congregation_id);
                 }),
                 function (string $attribute, mixed $value, Closure $fail) use ($publisher) {

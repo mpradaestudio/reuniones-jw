@@ -23,8 +23,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Publisher extends Model
 {
-    /** @use HasFactory<PublisherFactory> */
     use BelongsToCongregation;
+
+    /** @use HasFactory<PublisherFactory> */
     use HasFactory;
 
     protected $fillable = [
