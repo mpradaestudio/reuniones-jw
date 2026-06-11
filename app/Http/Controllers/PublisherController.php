@@ -7,6 +7,7 @@ use App\Enums\PublisherStatus;
 use App\Http\Requests\Publishers\StorePublisherRequest;
 use App\Http\Requests\Publishers\TogglePublisherStatusRequest;
 use App\Http\Requests\Publishers\UpdatePublisherRequest;
+use App\Models\Congregation;
 use App\Models\Publisher;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -30,16 +31,82 @@ use Illuminate\View\View;
  */
 class PublisherController extends Controller
 {
+    /** Número de registros por página en el listado. */
+    private const PER_PAGE = 15;
+
     /**
-     * Placeholder de listado — la UI real llega en PR B.
+     * Listado de publicadores con búsqueda, filtros y paginación del lado servidor.
+     *
+     * Búsqueda: nombre o apellidos (LIKE insensible a mayúsculas).
+     * Filtros: estado (PublisherStatus), privilegio (PublisherPrivilege), género.
+     * Aislamiento: AdministradorCongregacion solo ve su congregación;
+     * SuperAdministrador ve todas (con filtro opcional por congregación).
      */
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Publisher::class);
 
-        return view('placeholder', [
-            'title'   => 'Publicadores',
-            'message' => 'El listado de publicadores estará disponible en la próxima iteración.',
+        $actor = $request->user();
+
+        $filters = [
+            'q'            => trim((string) $request->query('q', '')),
+            'estado'       => trim((string) $request->query('estado', '')),
+            'privilegio'   => trim((string) $request->query('privilegio', '')),
+            'genero'       => trim((string) $request->query('genero', '')),
+            'congregation' => trim((string) $request->query('congregation', '')),
+        ];
+
+        $query = Publisher::query()
+            ->with(['congregation:id,nombre', 'user:id,email']);
+
+        // Aislamiento multi-tenant: el SuperAdmin puede ver todo y filtrar por
+        // congregación; el resto solo ve la suya (aplicado por CongregationScope).
+        if ($actor->isSuperAdmin()
+            && $filters['congregation'] !== ''
+            && ctype_digit($filters['congregation'])
+        ) {
+            $query->where('congregation_id', (int) $filters['congregation']);
+        }
+
+        // Búsqueda libre por nombre o apellidos.
+        if ($filters['q'] !== '') {
+            $q = $filters['q'];
+            $query->where(function ($sub) use ($q) {
+                $sub->where('nombre', 'like', "%{$q}%")
+                    ->orWhere('apellidos', 'like', "%{$q}%");
+            });
+        }
+
+        // Filtro por estado.
+        if ($filters['estado'] !== '' && PublisherStatus::tryFrom($filters['estado'])) {
+            $query->where('estado', $filters['estado']);
+        }
+
+        // Filtro por privilegio.
+        if ($filters['privilegio'] !== '' && PublisherPrivilege::tryFrom($filters['privilegio'])) {
+            $query->where('privilegio', $filters['privilegio']);
+        }
+
+        // Filtro por género.
+        if (in_array($filters['genero'], ['masculino', 'femenino'], true)) {
+            $query->where('genero', $filters['genero']);
+        }
+
+        $publishers = $query
+            ->orderBy('apellidos')
+            ->orderBy('nombre')
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
+
+        return view('publishers.index', [
+            'publishers'   => $publishers,
+            'filters'      => $filters,
+            'statuses'     => PublisherStatus::options(),
+            'privileges'   => PublisherPrivilege::options(),
+            'congregations' => $actor->isSuperAdmin()
+                ? Congregation::query()->orderBy('nombre')->get(['id', 'nombre'])
+                : collect(),
+            'isSuperAdmin' => $actor->isSuperAdmin(),
         ]);
     }
 
