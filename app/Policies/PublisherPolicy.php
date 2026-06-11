@@ -2,8 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\PublisherPrivilege;
-use App\Enums\PublisherStatus;
 use App\Models\Publisher;
 use App\Models\User;
 

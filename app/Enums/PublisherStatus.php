@@ -8,16 +8,16 @@ namespace App\Enums;
  */
 enum PublisherStatus: string
 {
-    case Active    = 'activo';
+    case Active = 'activo';
     case Irregular = 'irregular';
-    case Inactive  = 'inactivo';
+    case Inactive = 'inactivo';
 
     public function label(): string
     {
         return match ($this) {
-            self::Active    => 'Activo',
+            self::Active => 'Activo',
             self::Irregular => 'Irregular',
-            self::Inactive  => 'Inactivo',
+            self::Inactive => 'Inactivo',
         };
     }
 
@@ -25,9 +25,9 @@ enum PublisherStatus: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::Active    => 'text-bg-success',
+            self::Active => 'text-bg-success',
             self::Irregular => 'text-bg-warning',
-            self::Inactive  => 'text-bg-secondary',
+            self::Inactive => 'text-bg-secondary',
         };
     }
 

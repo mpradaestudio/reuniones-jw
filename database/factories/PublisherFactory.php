@@ -23,14 +23,14 @@ class PublisherFactory extends Factory
 
         return [
             'congregation_id' => null,
-            'user_id'         => null,
-            'nombre'          => fake()->firstName($genero === 'masculino' ? 'male' : 'female'),
-            'apellidos'       => fake()->lastName(),
-            'genero'          => $genero,
-            'fecha_bautismo'  => fake()->optional(0.8)->dateTimeBetween('-30 years', 'now')?->format('Y-m-d'),
-            'estado'          => PublisherStatus::Active,
-            'privilegio'      => PublisherPrivilege::Publisher,
-            'es_nombrado'     => false,
+            'user_id' => null,
+            'nombre' => fake()->firstName($genero === 'masculino' ? 'male' : 'female'),
+            'apellidos' => fake()->lastName(),
+            'genero' => $genero,
+            'fecha_bautismo' => fake()->optional(0.8)->dateTimeBetween('-30 years', 'now')?->format('Y-m-d'),
+            'estado' => PublisherStatus::Active,
+            'privilegio' => PublisherPrivilege::Publisher,
+            'es_nombrado' => false,
         ];
     }
 
@@ -45,8 +45,8 @@ class PublisherFactory extends Factory
     public function female(): static
     {
         return $this->state(fn (array $attributes) => [
-            'genero'    => 'femenino',
-            'nombre'    => fake()->firstName('female'),
+            'genero' => 'femenino',
+            'nombre' => fake()->firstName('female'),
             'privilegio' => PublisherPrivilege::Publisher,
         ]);
     }
@@ -54,8 +54,8 @@ class PublisherFactory extends Factory
     public function elder(): static
     {
         return $this->state(fn (array $attributes) => [
-            'genero'     => 'masculino',
-            'nombre'     => fake()->firstName('male'),
+            'genero' => 'masculino',
+            'nombre' => fake()->firstName('male'),
             'privilegio' => PublisherPrivilege::Elder,
             'es_nombrado' => true,
         ]);

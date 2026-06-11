@@ -36,7 +36,7 @@ class PublisherAuditTest extends TestCase
     {
         $user = User::factory()->create([
             'congregation_id' => $congregationId,
-            'estado'          => 'active',
+            'estado' => 'active',
         ]);
         $user->assignRole('AdministradorCongregacion');
 
@@ -62,13 +62,13 @@ class PublisherAuditTest extends TestCase
     public function test_crear_publicador_genera_audit_log(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $this->actingAs($admin)->post(route('publishers.store'), [
-            'nombre'     => 'Laura',
-            'apellidos'  => 'Martínez',
-            'genero'     => 'femenino',
-            'estado'     => PublisherStatus::Active->value,
+            'nombre' => 'Laura',
+            'apellidos' => 'Martínez',
+            'genero' => 'femenino',
+            'estado' => PublisherStatus::Active->value,
             'privilegio' => PublisherPrivilege::Publisher->value,
             'es_nombrado' => false,
         ]);
@@ -88,14 +88,14 @@ class PublisherAuditTest extends TestCase
     public function test_editar_publicador_registra_solo_campos_modificados(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
-        $publisher    = $this->makePublisher($congregation->id, ['nombre' => 'Original']);
+        $admin = $this->makeAdmin($congregation->id);
+        $publisher = $this->makePublisher($congregation->id, ['nombre' => 'Original']);
 
         $this->actingAs($admin)->put(route('publishers.update', $publisher), [
-            'nombre'     => 'Modificado',
-            'apellidos'  => $publisher->apellidos,
-            'genero'     => $publisher->genero,
-            'estado'     => $publisher->estado->value,
+            'nombre' => 'Modificado',
+            'apellidos' => $publisher->apellidos,
+            'genero' => $publisher->genero,
+            'estado' => $publisher->estado->value,
             'privilegio' => $publisher->privilegio->value,
             'es_nombrado' => $publisher->es_nombrado,
         ]);
@@ -112,8 +112,8 @@ class PublisherAuditTest extends TestCase
     public function test_toggle_status_genera_publisher_status_changed(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
-        $publisher    = $this->makePublisher($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
+        $publisher = $this->makePublisher($congregation->id);
 
         $this->actingAs($admin)->patch(route('publishers.toggle-status', $publisher), [
             'estado' => PublisherStatus::Irregular->value,
@@ -128,7 +128,7 @@ class PublisherAuditTest extends TestCase
     public function test_eliminar_publicador_genera_publisher_deleted(): void
     {
         $congregation = Congregation::factory()->create();
-        $superAdmin   = $this->makeSuperAdmin();
+        $superAdmin = $this->makeSuperAdmin();
 
         $publisher = $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Publisher->value,
@@ -148,12 +148,12 @@ class PublisherAuditTest extends TestCase
     public function test_accion_bloqueada_ultimo_anciano_no_genera_log(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $elder = $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Elder->value,
-            'estado'     => PublisherStatus::Active->value,
-            'genero'     => 'masculino',
+            'estado' => PublisherStatus::Active->value,
+            'genero' => 'masculino',
         ]);
 
         $this->actingAs($admin)->patch(route('publishers.toggle-status', $elder), [

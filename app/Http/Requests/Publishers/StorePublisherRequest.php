@@ -25,12 +25,12 @@ class StorePublisherRequest extends FormRequest
         $actor = $this->user();
 
         return [
-            'nombre'          => ['required', 'string', 'max:100'],
-            'apellidos'       => ['required', 'string', 'max:100'],
-            'genero'          => ['required', Rule::in(['masculino', 'femenino'])],
-            'fecha_bautismo'  => ['nullable', 'date', 'before_or_equal:today'],
-            'estado'          => ['required', new Enum(PublisherStatus::class)],
-            'privilegio'      => [
+            'nombre' => ['required', 'string', 'max:100'],
+            'apellidos' => ['required', 'string', 'max:100'],
+            'genero' => ['required', Rule::in(['masculino', 'femenino'])],
+            'fecha_bautismo' => ['nullable', 'date', 'before_or_equal:today'],
+            'estado' => ['required', new Enum(PublisherStatus::class)],
+            'privilegio' => [
                 'required',
                 new Enum(PublisherPrivilege::class),
                 // Anciano y siervo ministerial solo para hombres.
@@ -42,9 +42,9 @@ class StorePublisherRequest extends FormRequest
                     }
                 },
             ],
-            'es_nombrado'     => ['boolean'],
+            'es_nombrado' => ['boolean'],
             // user_id: opcional; si se proporciona debe existir en la misma congregación.
-            'user_id'         => [
+            'user_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) use ($actor) {

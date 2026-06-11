@@ -27,27 +27,27 @@ class UpdatePublisherRequest extends FormRequest
     {
         /** @var Publisher $publisher */
         $publisher = $this->route('publisher');
-        $actor     = $this->user();
+        $actor = $this->user();
 
         return [
-            'nombre'          => ['required', 'string', 'max:100'],
-            'apellidos'       => ['required', 'string', 'max:100'],
-            'genero'          => ['required', Rule::in(['masculino', 'femenino'])],
-            'fecha_bautismo'  => ['nullable', 'date', 'before_or_equal:today'],
-            'estado'          => ['required', new Enum(PublisherStatus::class)],
-            'privilegio'      => [
+            'nombre' => ['required', 'string', 'max:100'],
+            'apellidos' => ['required', 'string', 'max:100'],
+            'genero' => ['required', Rule::in(['masculino', 'femenino'])],
+            'fecha_bautismo' => ['nullable', 'date', 'before_or_equal:today'],
+            'estado' => ['required', new Enum(PublisherStatus::class)],
+            'privilegio' => [
                 'required',
                 new Enum(PublisherPrivilege::class),
                 function (string $attribute, mixed $value, Closure $fail) {
-                    $genero    = $this->input('genero');
+                    $genero = $this->input('genero');
                     $privilege = PublisherPrivilege::tryFrom($value);
                     if ($privilege && $privilege->requiresMale() && $genero !== 'masculino') {
                         $fail('El privilegio de '.($privilege->label()).' solo puede asignarse a un hombre.');
                     }
                 },
             ],
-            'es_nombrado'     => ['boolean'],
-            'user_id'         => [
+            'es_nombrado' => ['boolean'],
+            'user_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) use ($actor, $publisher) {

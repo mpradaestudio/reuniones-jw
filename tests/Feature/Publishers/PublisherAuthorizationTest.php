@@ -34,7 +34,7 @@ class PublisherAuthorizationTest extends TestCase
     {
         $user = User::factory()->create([
             'congregation_id' => $congregationId,
-            'estado'          => 'active',
+            'estado' => 'active',
         ]);
         $user->assignRole($role);
 
@@ -52,10 +52,10 @@ class PublisherAuthorizationTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'nombre'     => 'Juan',
-            'apellidos'  => 'Pérez',
-            'genero'     => 'masculino',
-            'estado'     => PublisherStatus::Active->value,
+            'nombre' => 'Juan',
+            'apellidos' => 'Pérez',
+            'genero' => 'masculino',
+            'estado' => PublisherStatus::Active->value,
             'privilegio' => PublisherPrivilege::Publisher->value,
             'es_nombrado' => false,
         ], $overrides);
@@ -100,8 +100,8 @@ class PublisherAuthorizationTest extends TestCase
         $response->assertRedirect(route('publishers.index'));
         $this->assertDatabaseHas('publishers', [
             'congregation_id' => $congregation->id,
-            'nombre'          => 'Juan',
-            'apellidos'       => 'Pérez',
+            'nombre' => 'Juan',
+            'apellidos' => 'Pérez',
         ]);
     }
 
@@ -114,7 +114,7 @@ class PublisherAuthorizationTest extends TestCase
         $congA = Congregation::factory()->create();
         $congB = Congregation::factory()->create();
 
-        $admin     = $this->makeUser('AdministradorCongregacion', $congA->id);
+        $admin = $this->makeUser('AdministradorCongregacion', $congA->id);
         $publisher = $this->makePublisher($congB->id);
 
         // El CongregationScope (Global Scope de Publisher) oculta registros de
@@ -132,8 +132,8 @@ class PublisherAuthorizationTest extends TestCase
     public function test_admin_puede_editar_publicador_de_su_congregacion(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeUser('AdministradorCongregacion', $congregation->id);
-        $publisher    = $this->makePublisher($congregation->id);
+        $admin = $this->makeUser('AdministradorCongregacion', $congregation->id);
+        $publisher = $this->makePublisher($congregation->id);
 
         $this->actingAs($admin)
             ->put(route('publishers.update', $publisher), $this->validPayload(['nombre' => 'Editado']))
@@ -149,8 +149,8 @@ class PublisherAuthorizationTest extends TestCase
     public function test_admin_congregacion_no_puede_eliminar_publicador(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeUser('AdministradorCongregacion', $congregation->id);
-        $publisher    = $this->makePublisher($congregation->id);
+        $admin = $this->makeUser('AdministradorCongregacion', $congregation->id);
+        $publisher = $this->makePublisher($congregation->id);
 
         $this->actingAs($admin)
             ->delete(route('publishers.destroy', $publisher))
@@ -160,7 +160,7 @@ class PublisherAuthorizationTest extends TestCase
     public function test_super_admin_puede_eliminar_publicador(): void
     {
         $congregation = Congregation::factory()->create();
-        $superAdmin   = $this->makeUser('SuperAdministrador', null);
+        $superAdmin = $this->makeUser('SuperAdministrador', null);
 
         // Necesita un segundo anciano para que el primero sea eliminable.
         $publisher = $this->makePublisher($congregation->id, [
@@ -181,8 +181,8 @@ class PublisherAuthorizationTest extends TestCase
     public function test_super_admin_puede_editar_publicador_de_cualquier_congregacion(): void
     {
         $congregation = Congregation::factory()->create();
-        $superAdmin   = $this->makeUser('SuperAdministrador', null);
-        $publisher    = $this->makePublisher($congregation->id);
+        $superAdmin = $this->makeUser('SuperAdministrador', null);
+        $publisher = $this->makePublisher($congregation->id);
 
         $this->actingAs($superAdmin)
             ->put(route('publishers.update', $publisher), $this->validPayload(['nombre' => 'Global']))
@@ -198,13 +198,13 @@ class PublisherAuthorizationTest extends TestCase
     public function test_no_se_puede_desactivar_al_ultimo_anciano_activo(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeUser('AdministradorCongregacion', $congregation->id);
+        $admin = $this->makeUser('AdministradorCongregacion', $congregation->id);
 
         // Un único anciano activo en la congregación.
         $elder = $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Elder->value,
-            'estado'     => PublisherStatus::Active->value,
-            'genero'     => 'masculino',
+            'estado' => PublisherStatus::Active->value,
+            'genero' => 'masculino',
         ]);
 
         $response = $this->actingAs($admin)
@@ -219,18 +219,18 @@ class PublisherAuthorizationTest extends TestCase
     public function test_se_puede_desactivar_anciano_si_hay_otro_activo(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeUser('AdministradorCongregacion', $congregation->id);
+        $admin = $this->makeUser('AdministradorCongregacion', $congregation->id);
 
         // Dos ancianos activos.
         $elder1 = $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Elder->value,
-            'estado'     => PublisherStatus::Active->value,
-            'genero'     => 'masculino',
+            'estado' => PublisherStatus::Active->value,
+            'genero' => 'masculino',
         ]);
         $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Elder->value,
-            'estado'     => PublisherStatus::Active->value,
-            'genero'     => 'masculino',
+            'estado' => PublisherStatus::Active->value,
+            'genero' => 'masculino',
         ]);
 
         $this->actingAs($admin)
@@ -245,18 +245,18 @@ class PublisherAuthorizationTest extends TestCase
     public function test_no_se_puede_degradar_al_ultimo_anciano_activo_en_update(): void
     {
         $congregation = Congregation::factory()->create();
-        $superAdmin   = $this->makeUser('SuperAdministrador', null);
+        $superAdmin = $this->makeUser('SuperAdministrador', null);
 
         $elder = $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Elder->value,
-            'estado'     => PublisherStatus::Active->value,
-            'genero'     => 'masculino',
+            'estado' => PublisherStatus::Active->value,
+            'genero' => 'masculino',
         ]);
 
         // Intentar bajar de privilegio al único anciano.
         $response = $this->actingAs($superAdmin)
             ->put(route('publishers.update', $elder), $this->validPayload([
-                'genero'     => 'masculino',
+                'genero' => 'masculino',
                 'privilegio' => PublisherPrivilege::Publisher->value,
             ]));
 
@@ -267,12 +267,12 @@ class PublisherAuthorizationTest extends TestCase
     public function test_no_se_puede_eliminar_al_ultimo_anciano_activo(): void
     {
         $congregation = Congregation::factory()->create();
-        $superAdmin   = $this->makeUser('SuperAdministrador', null);
+        $superAdmin = $this->makeUser('SuperAdministrador', null);
 
         $elder = $this->makePublisher($congregation->id, [
             'privilegio' => PublisherPrivilege::Elder->value,
-            'estado'     => PublisherStatus::Active->value,
-            'genero'     => 'masculino',
+            'estado' => PublisherStatus::Active->value,
+            'genero' => 'masculino',
         ]);
 
         $this->actingAs($superAdmin)

@@ -8,16 +8,16 @@ namespace App\Enums;
  */
 enum PublisherPrivilege: string
 {
-    case Publisher          = 'publicador';
+    case Publisher = 'publicador';
     case MinisterialServant = 'siervo_ministerial';
-    case Elder              = 'anciano';
+    case Elder = 'anciano';
 
     public function label(): string
     {
         return match ($this) {
-            self::Publisher          => 'Publicador',
+            self::Publisher => 'Publicador',
             self::MinisterialServant => 'Siervo ministerial',
-            self::Elder              => 'Anciano',
+            self::Elder => 'Anciano',
         };
     }
 
@@ -25,9 +25,9 @@ enum PublisherPrivilege: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::Publisher          => 'text-bg-secondary',
+            self::Publisher => 'text-bg-secondary',
             self::MinisterialServant => 'text-bg-info',
-            self::Elder              => 'text-bg-primary',
+            self::Elder => 'text-bg-primary',
         };
     }
 

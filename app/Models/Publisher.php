@@ -42,10 +42,10 @@ class Publisher extends Model
     protected function casts(): array
     {
         return [
-            'estado'          => PublisherStatus::class,
-            'privilegio'      => PublisherPrivilege::class,
-            'es_nombrado'     => 'boolean',
-            'fecha_bautismo'  => 'date',
+            'estado' => PublisherStatus::class,
+            'privilegio' => PublisherPrivilege::class,
+            'es_nombrado' => 'boolean',
+            'fecha_bautismo' => 'date',
         ];
     }
 

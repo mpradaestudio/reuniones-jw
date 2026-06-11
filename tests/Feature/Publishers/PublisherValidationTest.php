@@ -33,7 +33,7 @@ class PublisherValidationTest extends TestCase
     {
         $user = User::factory()->create([
             'congregation_id' => $congregationId,
-            'estado'          => 'active',
+            'estado' => 'active',
         ]);
         $user->assignRole('AdministradorCongregacion');
 
@@ -43,10 +43,10 @@ class PublisherValidationTest extends TestCase
     private function base(array $overrides = []): array
     {
         return array_merge([
-            'nombre'     => 'Ana',
-            'apellidos'  => 'García',
-            'genero'     => 'femenino',
-            'estado'     => PublisherStatus::Active->value,
+            'nombre' => 'Ana',
+            'apellidos' => 'García',
+            'genero' => 'femenino',
+            'estado' => PublisherStatus::Active->value,
             'privilegio' => PublisherPrivilege::Publisher->value,
             'es_nombrado' => false,
         ], $overrides);
@@ -55,11 +55,11 @@ class PublisherValidationTest extends TestCase
     public function test_privilegio_anciano_rechazado_para_mujer(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $this->actingAs($admin)
             ->post(route('publishers.store'), $this->base([
-                'genero'     => 'femenino',
+                'genero' => 'femenino',
                 'privilegio' => PublisherPrivilege::Elder->value,
             ]))
             ->assertSessionHasErrors('privilegio');
@@ -68,11 +68,11 @@ class PublisherValidationTest extends TestCase
     public function test_privilegio_siervo_ministerial_rechazado_para_mujer(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $this->actingAs($admin)
             ->post(route('publishers.store'), $this->base([
-                'genero'     => 'femenino',
+                'genero' => 'femenino',
                 'privilegio' => PublisherPrivilege::MinisterialServant->value,
             ]))
             ->assertSessionHasErrors('privilegio');
@@ -81,11 +81,11 @@ class PublisherValidationTest extends TestCase
     public function test_privilegio_publicador_aceptado_para_mujer(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $this->actingAs($admin)
             ->post(route('publishers.store'), $this->base([
-                'genero'     => 'femenino',
+                'genero' => 'femenino',
                 'privilegio' => PublisherPrivilege::Publisher->value,
             ]))
             ->assertRedirect(route('publishers.index'));
@@ -108,18 +108,18 @@ class PublisherValidationTest extends TestCase
     public function test_user_id_de_la_misma_congregacion_aceptado(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $linkedUser = User::factory()->create([
             'congregation_id' => $congregation->id,
-            'estado'          => 'active',
+            'estado' => 'active',
         ]);
         $linkedUser->assignRole('Usuario');
 
         $this->actingAs($admin)
             ->post(route('publishers.store'), $this->base([
-                'nombre'  => 'Carlos',
-                'genero'  => 'masculino',
+                'nombre' => 'Carlos',
+                'genero' => 'masculino',
                 'user_id' => $linkedUser->id,
             ]))
             ->assertRedirect(route('publishers.index'));
@@ -130,25 +130,25 @@ class PublisherValidationTest extends TestCase
     public function test_user_id_ya_vinculado_a_otro_publicador_rechazado(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $linkedUser = User::factory()->create([
             'congregation_id' => $congregation->id,
-            'estado'          => 'active',
+            'estado' => 'active',
         ]);
         $linkedUser->assignRole('Usuario');
 
         // Primer publicador ya vinculado a ese user.
         Publisher::factory()->create([
             'congregation_id' => $congregation->id,
-            'user_id'         => $linkedUser->id,
+            'user_id' => $linkedUser->id,
         ]);
 
         // Intento de crear otro publicador con el mismo user_id.
         $this->actingAs($admin)
             ->post(route('publishers.store'), $this->base([
-                'nombre'  => 'Duplicado',
-                'genero'  => 'masculino',
+                'nombre' => 'Duplicado',
+                'genero' => 'masculino',
                 'user_id' => $linkedUser->id,
             ]))
             ->assertSessionHasErrors('user_id');
@@ -157,7 +157,7 @@ class PublisherValidationTest extends TestCase
     public function test_campos_requeridos_fallan_si_ausentes(): void
     {
         $congregation = Congregation::factory()->create();
-        $admin        = $this->makeAdmin($congregation->id);
+        $admin = $this->makeAdmin($congregation->id);
 
         $this->actingAs($admin)
             ->post(route('publishers.store'), [])
