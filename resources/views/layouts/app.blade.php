@@ -53,6 +53,7 @@
                 ['route' => 'congregations.index', 'label' => 'Congregaciones', 'can' => 'congregations.view'],
                 ['route' => 'users.index', 'label' => 'Usuarios', 'can' => 'users.view'],
                 ['route' => 'roles.index', 'label' => 'Roles', 'can' => 'roles.view'],
+                ['route' => 'audit.index', 'label' => 'Auditoría', 'can' => 'audit.view'],
                 ['route' => 'settings.index', 'label' => 'Configuración', 'can' => null],
             ])
 

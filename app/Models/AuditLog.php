@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\AuditLogFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -12,6 +14,9 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class AuditLog extends Model
 {
+    /** @use HasFactory<AuditLogFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'congregation_id',
         'user_id',
