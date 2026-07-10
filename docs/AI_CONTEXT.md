@@ -1,5 +1,28 @@
 # AI Context
 
+Este documento es la guía principal para cualquier IA que trabaje en este repositorio.
+
+Antes de modificar el código debes leer este archivo completo.
+
+Después consulta, cuando sea necesario:
+
+- ARCHITECTURE.md
+- CONVENTIONS.md
+- DATABASE.md
+- SECURITY.md
+- ROADMAP.md
+- DECISIONS.md
+
+Si existe conflicto entre la conversación y la documentación, solicita aclaración antes de modificar el proyecto.
+
+No modifiques la arquitectura sin justificar el cambio.
+
+No elimines funcionalidades existentes.
+
+No cambies Bootstrap 5 por otro framework.
+
+Ejecuta pruebas cuando modifiques funcionalidades existentes.
+
 ## Proyecto
 
 Sistema web para la gestión de congregaciones.

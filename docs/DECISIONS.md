@@ -1,3 +1,35 @@
+# Decisiones Arquitectónicas
+
+## Bootstrap 5
+
+Se adopta Bootstrap 5 como único framework CSS.
+
+---
+
+## Policies
+
+Toda autorización se implementa mediante Policies.
+
+---
+
+## Git
+
+Se trabaja mediante ramas feature/*.
+
+---
+
+## Laravel
+
+Se utiliza la arquitectura MVC estándar.
+
+---
+
+## IA
+
+Toda IA debe leer AI_CONTEXT.md antes de modificar el proyecto.
+
+
+
 # Registro de decisiones de arquitectura (ADR) — reuniones-jw
 
 Este documento registra las decisiones de arquitectura **cerradas** que guían la

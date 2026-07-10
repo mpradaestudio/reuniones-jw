@@ -1,3 +1,89 @@
+# Arquitectura del Proyecto
+
+## Objetivo
+
+Sistema web para la gestión de congregaciones, reuniones y asignaciones.
+
+El sistema debe ser escalable, seguro y preparado para soportar múltiples congregaciones mediante aislamiento de datos (Multitenancy).
+
+---
+
+# Stack Tecnológico
+
+- Laravel
+- PHP 8.3
+- MySQL
+- Bootstrap 5
+- Blade
+- Vite
+- PHPUnit
+
+---
+
+# Arquitectura
+
+Se utiliza el patrón MVC de Laravel.
+
+- Controllers
+- Models
+- Views (Blade)
+- Policies
+- Middleware
+- Form Requests
+- Migrations
+- Seeders
+
+---
+
+# Principios
+
+- Controllers delgados.
+- Lógica de negocio reutilizable.
+- Policies para autorización.
+- Form Requests para validación.
+- Bootstrap 5 como único framework CSS.
+
+---
+
+# Multitenancy
+
+El acceso a la información siempre debe estar restringido por congregación.
+
+Nunca se deben devolver registros pertenecientes a otra congregación.
+
+---
+
+# Flujo
+
+Usuario
+
+↓
+
+Middleware
+
+↓
+
+Policy
+
+↓
+
+Controller
+
+↓
+
+Model
+
+↓
+
+Vista Blade
+
+---
+
+# Pruebas
+
+Toda funcionalidad importante debe tener pruebas Feature o Unit.
+
+
 # Análisis y diseño — reuniones-jw
 
 > Documento de **diseño** (fase previa al código). Define el modelo de datos,
